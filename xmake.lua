@@ -45,11 +45,6 @@ add_headerfiles("src/**.h")
 add_includedirs("src")
 set_pcxxheader("src/pch.h")
 
--- copy folder
-
-
--- add install files
-add_installfiles("contrib/*.ini", { prefixdir = "SKSE/Plugins" })
 
 after_build(function(target)
     local copy = function(env, ext)
@@ -59,7 +54,6 @@ after_build(function(target)
                 os.mkdir(plugins)
                 os.trycp(target:targetfile(), plugins)
                 os.trycp(target:symbolfile(), plugins)
-                os.trycp("contrib/**", plugin)
             end
         end
     end
