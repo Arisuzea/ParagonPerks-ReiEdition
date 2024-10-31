@@ -6,6 +6,7 @@
 # folders
 build/
 vs*/
+lib/test*
 
 # files
 *.zip
