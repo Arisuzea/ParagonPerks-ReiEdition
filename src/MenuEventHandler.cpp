@@ -4,7 +4,7 @@ RE::BSEventNotifyControl MenuEventHandler::MenuEvent::ProcessEvent(const RE::Men
 {
     auto            input_event  = Input::InputEventSink::GetSingleton();
     auto            journal_menu = RE::JournalMenu::MENU_NAME;
-    const Settings* settings     = Settings::GetSingleton();
+    Settings* const settings     = Settings::GetSingleton();
     RE::UI*         menu         = RE::UI::GetSingleton();
 
     if (!event) {
@@ -19,6 +19,7 @@ RE::BSEventNotifyControl MenuEventHandler::MenuEvent::ProcessEvent(const RE::Men
     if (event->menuName == journal_menu) {
         if (!event->opening) {
             input_event->GetMappedKey();
+            settings->LoadMCMSettings();
             logger::debug("got mapped keys");
         }
     }

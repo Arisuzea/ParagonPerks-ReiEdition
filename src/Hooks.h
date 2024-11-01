@@ -22,4 +22,23 @@ namespace Hooks
 
     bool InstallHooks();
     bool InstallBashMultHook();
+
+    class ActorUpdateHook
+    {
+    public: 
+        static void InstallUpdateActor();
+    private:
+        static void ActorUpdate(RE::Character* a_this, float a_delta);
+        static inline REL::Relocation<decltype(&ActorUpdate)> _ActorUpdate;
+    };
+    class CombatHit {
+    public:
+        static void Install();
+
+    private:
+        static void PitFighter(RE::Actor* a_this, RE::HitData* a_hitData);
+        static void CHit(RE::Actor* a_this, RE::HitData* a_hitData);
+        static inline REL::Relocation<decltype(&CHit)> _originalCall;
+    };
+
 } // namespace Hooks

@@ -38,6 +38,20 @@ void Settings::LoadSettings()
     logger::info("... finished");
 }
 
+void Settings::LoadMCMSettings()
+{
+    logger::info("loading MCM settings...");
+    CSimpleIniA ini;
+    ini.SetUnicode();
+    ini.LoadFile(L"(.\"Data\MCM\Config\ValorPerks\settings.ini");
+
+
+    ReadColorStringSetting(ini, "General", "colorCodeStaminaPenalty", uColorCodeStamBar);
+    dualBlockKey = std::stoi(ini.GetValue("General", "iDualBlockKey", "48"));
+
+
+}
+
 RE::FormID Settings::ParseFormID(const std::string& str)
 {
     RE::FormID         result;
@@ -108,6 +122,7 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
     const int arrow_rain_cd_spell = 0x0;
     const int arrow_rain_cd_effect = 0x0; 
     const int stam_pen_effect = 0x06D;
+    const int npc_stam_pen_effect = 0xCD8;
 
     auto dataHandler = RE::TESDataHandler::GetSingleton();
 
@@ -131,6 +146,7 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
     // Effects:
     MAG_ParryWindowEffect = dataHandler->LookupForm(ParryWindowEffect, FileName)->As<RE::EffectSetting>();
     StaminaPenaltyEffect = dataHandler->LookupForm(stam_pen_effect, FileName)->As<RE::EffectSetting>();
+    StaminaPenEffectNPC = dataHandler->LookupForm(npc_stam_pen_effect, FileName)->As<RE::EffectSetting>();
     // Spells:
     IsBlockingSpell              = dataHandler->LookupForm(isBlockSpell, FileName)->As<RE::SpellItem>();
     PowerAttackStopSpell         = dataHandler->LookupForm(power_attack_stop, FileName)->As<RE::SpellItem>();
@@ -193,5 +209,49 @@ void Settings::SetGlobalsAndGameSettings()
         logger::info("Setting max armor rating to 75");
         maxRatingSetting->data.f = 75.0f;
         return;
+    } 
+}
+void Settings::ReadColorStringSetting(CSimpleIniA& a_ini, const char* a_sectionName, const char* a_settingName, uint32_t& a_setting)
+{
+    const char* value = nullptr;
+    constexpr std::string_view prefix1 = "0x";
+    constexpr std::string_view prefix2 = "#";
+    constexpr std::string_view cset = "0123456789ABCDEFabcdef";
+
+    value = a_ini.GetValue(a_sectionName, a_settingName);
+    if (value) {
+        std::string_view str = value;
+
+        if (str.starts_with(prefix1)) {
+            str.remove_prefix(prefix1.size());
+        }
+
+        if (str.starts_with(prefix2)) {
+            str.remove_prefix(prefix2.size());
+        }
+
+        bool bMatches = std::strspn(str.data(), cset.data()) == str.size();
+
+        if (bMatches) {
+            a_setting = std::stoi(str.data(), 0, 16);
+        }
+        else {
+            const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+            auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+            if (vm) {
+                RE::BSFixedString modName{ "ValorPerks" };
+                std::string settingStr = a_settingName;
+                settingStr.append(":");
+                settingStr.append(a_sectionName);
+                RE::BSFixedString setting = settingStr;
+                std::string settingValue = "0xFFFFFF";
+                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                auto vmargs = RE::MakeFunctionArguments(std::move(modName), std::move(setting), std::move(settingValue));
+                vm->DispatchStaticCall("MCM", "SetModSettingString", vmargs, callback);
+                delete vmargs;
+            }
+        }
     }
 }
+
+

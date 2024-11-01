@@ -9,41 +9,9 @@ public:
     void LoadForms();
     void AdjustWeaponStaggerVals();
     void GetIngameData();
-    void SetGlobalsAndGameSettings();
-
-    // FormIDs for ini lookup
-    RE::FormID ID1AttackSpell;
-    RE::FormID ID2BlockSpell;
-    RE::FormID ID3SneakSpell;
-    RE::FormID ID4SprinSpell;
-    RE::FormID ID5MountSprint;
-    RE::FormID ID6BowStam;
-    RE::FormID ID7XBowStam;
-    RE::FormID ID8CastSpell;
-    RE::FormID ID9ParryStagger;
-    RE::FormID ID10ParryController;
-    RE::FormID ID11CrossbowDrain;
-    RE::FormID ID12ParryBuff;
-    RE::FormID ID13JumpSpell;
-    RE::FormID ID14PowerAttackStop;
-    RE::FormID ID15DodgeSpell;
-    RE::FormID ID16BashStamina;
-    RE::FormID ID17BlockStamina;
-    RE::FormID ID18SparksNormal;
-    RE::FormID ID19SparksPhysics;
-    RE::FormID ID20SparksWeapon;
-    RE::FormID ID21SparksShield;
-    RE::FormID ID22StaminaCost;
-    RE::FormID ID23StaminaCostNpc;
-    RE::FormID ID24DualBlock;
-    RE::FormID ID25ParryWinEffect;
-    RE::FormID ID26ArrowRainCooldown;
-    RE::FormID ID27MultiShotCooldown;
-    RE::FormID ID28ArrowRainPerk;
-    RE::FormID ID29MultiShotPerk;
-    RE::FormID ID30ArrowRainCooldownEffect;
-    RE::FormID ID31MultiShotCooldownEffect;
-    RE::FormID ID32StaminaPenaltyEffect;
+    void SetGlobalsAndGameSettings();  
+    void LoadMCMSettings();
+    void ReadColorStringSetting(CSimpleIniA& a_ini, const char* a_sectionName, const char* a_settingName, uint32_t& a_setting);
 
     // Spells
     RE::SpellItem* IsAttackingSpell;
@@ -83,6 +51,7 @@ public:
     RE::EffectSetting* ArrowRainCooldownEffect;
     RE::EffectSetting* MultiShotCooldownEffect;
     RE::EffectSetting* StaminaPenaltyEffect;
+    RE::EffectSetting* StaminaPenEffectNPC;
     // Conditions
     RE::TESCondition* IsPowerAttacking;
 
@@ -108,7 +77,9 @@ public:
     inline static uint32_t blockKeyKeyboard{ 0xFF };
     inline static uint32_t blockKeyGamePad{ 0xFF };
     int                    maxFrameCheck = 6;
-    uint32_t               dualBlockKey;
+    static inline uint32_t               dualBlockKey;
+    static inline std::string colorCodeStaminaPenalty;
+    static inline uint32_t uColorCodeStamBar = 0xDF2020;
 
     static inline bool TrueHudAPI_Obtained;
 

@@ -68,7 +68,6 @@ public:
                     dlog("start arrow rain");
                 }*/               
             }
-
             if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target && !a_event->projectile) {
                 logger::debug;
                 ("entered block event");
