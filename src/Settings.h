@@ -37,6 +37,13 @@ public:
     RE::FormID ID23StaminaCostNpc;
     RE::FormID ID24DualBlock;
     RE::FormID ID25ParryWinEffect;
+    RE::FormID ID26ArrowRainCooldown;
+    RE::FormID ID27MultiShotCooldown;
+    RE::FormID ID28ArrowRainPerk;
+    RE::FormID ID29MultiShotPerk;
+    RE::FormID ID30ArrowRainCooldownEffect;
+    RE::FormID ID31MultiShotCooldownEffect;
+    RE::FormID ID32StaminaPenaltyEffect;
 
     // Spells
     RE::SpellItem* IsAttackingSpell;
@@ -53,11 +60,15 @@ public:
     RE::SpellItem* APOParryBuffSPell;
     RE::SpellItem* jumpSpell;
     RE::SpellItem* PowerAttackStopSpell;
+    RE::SpellItem* ArrowRainCooldownSpell;
+    RE::SpellItem* MultiShotCooldownSpell;
 
     RE::SpellItem* DodgeRuneSpell;
     // Perks
     RE::BGSPerk* BashStaminaPerk;
     RE::BGSPerk* BlockStaminaPerk;
+    RE::BGSPerk* ArrowRainPerk;
+    RE::BGSPerk* MultiShotPerk;
     // Explosions (Sparks)
     RE::BGSExplosion* APOSparks;
     RE::BGSExplosion* APOSparksPhysics;
@@ -69,6 +80,9 @@ public:
     RE::TESGlobal* DualBlockKey;
     // Effects
     RE::EffectSetting* MAG_ParryWindowEffect;
+    RE::EffectSetting* ArrowRainCooldownEffect;
+    RE::EffectSetting* MultiShotCooldownEffect;
+    RE::EffectSetting* StaminaPenaltyEffect;
     // Conditions
     RE::TESCondition* IsPowerAttacking;
 
@@ -95,6 +109,8 @@ public:
     inline static uint32_t blockKeyGamePad{ 0xFF };
     int                    maxFrameCheck = 6;
     uint32_t               dualBlockKey;
+
+    static inline bool TrueHudAPI_Obtained;
 
     // tests
     RE::BGSPerk* dummyPerkDodge;

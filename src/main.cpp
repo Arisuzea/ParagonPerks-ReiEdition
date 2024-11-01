@@ -5,6 +5,18 @@
 #include "MenuEventHandler.h"
 #include "PickpocketReplace.h"
 
+void initTrueHUDAPI() {
+    auto val = Conditions::APIuse::GetSingleton();
+    val->ersh_TrueHUD = reinterpret_cast<TRUEHUD_API::IVTrueHUD3*>(TRUEHUD_API::RequestPluginAPI(TRUEHUD_API::InterfaceVersion::V3));
+    if (val->ersh_TrueHUD) {
+        logger::info("Obtained TruehudAPI - {0:x}", (uintptr_t)val->ersh_TrueHUD);
+        Settings::TrueHudAPI_Obtained = true;
+    } else {
+        logger::info("TrueHUD API not found.");
+        Settings::TrueHudAPI_Obtained = false;
+    }
+}
+
 void InitLogger()
 {
     auto path{ SKSE::log::log_directory() };
@@ -35,6 +47,7 @@ void InitListener(SKSE::MessagingInterface::Message* a_msg)
         Settings::GetSingleton()->SetGlobalsAndGameSettings();
     }
     if (a_msg->type == SKSE::MessagingInterface::kPostLoad) {
+        initTrueHUDAPI();
         if (!Hooks::InstallBashMultHook()) {
             logger::error("Bash hook installation failed.");
         }
@@ -59,9 +72,10 @@ void InitListener(SKSE::MessagingInterface::Message* a_msg)
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
-    InitLogger(); // 1.6
+    
 
     SKSE::Init(skse);
+    InitLogger(); // 1.6
     const auto plugin{ SKSE::PluginDeclaration::GetSingleton() };
     const auto version{ plugin->GetVersion() };
 

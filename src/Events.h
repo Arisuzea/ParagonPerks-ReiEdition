@@ -63,9 +63,10 @@ public:
             if (weap->IsBow()) {
                 logger::debug("weapon is bow");
                 Settings* settings = Settings::GetSingleton();
-                //Conditions::LaunchFireMeteores(aggressor, settings->fireBolt, defender);
-                LaunchArrowRain(aggressor, defender, 800.0f);
-                
+                /*if (!Conditions::ActorHasActiveEffect(aggressor, settings->ArrowRainCooldownEffect)) {
+                    LaunchArrowRain(aggressor, defender, 800.0f);
+                    dlog("start arrow rain");
+                }*/               
             }
 
             if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target && !a_event->projectile) {
@@ -143,28 +144,40 @@ public:
         return continueEvent;
     }    
 
+    void StartMultiShot(RE::Actor* attacker, RE::Actor* target) {
+        auto weap = Conditions::getWieldingWeapon(attacker);
+        SKSE::GetTaskInterface()->AddTask([=] {
+        Conditions::LaunchExtraArrow(attacker, attacker->GetCurrentAmmo(), weap, "", -1, target, nullptr);
+            });
+    }
+
     void LaunchArrowRain(RE::Actor* attacker, RE::Actor* target, float a_area) {
         Settings* settings = Settings::GetSingleton();
         
-        if (Conditions::getWieldingWeapon(attacker)->IsBow() && attacker->HasPerk(settings->dummyPerkDodge) && !do_once) 
+        if (Conditions::getWieldingWeapon(attacker)->IsBow()) 
         {
-            RE::PlayerCharacter* player = Cache::GetPlayerSingleton();
-            if (attacker == player) {
-                do_once = !do_once;
-                for (int i = 0; i < 75; i++) {
-                    SKSE::GetTaskInterface()->AddTask([=] {
-                        Conditions::ArrowRain(target, attacker, attacker->GetCurrentAmmo(), target, target, a_area, 500, player->GetInfoRuntimeData().pendingPoison);
-                        });                   
+            if(attacker->HasPerk(settings->ArrowRainPerk) && !Conditions::ActorHasActiveEffect(attacker, settings->ArrowRainCooldownEffect))
+            {
+                // separation needed to apply poisons to arrow rain
+                RE::PlayerCharacter* player = Cache::GetPlayerSingleton(); 
+                if (attacker == player) {
+                    Conditions::ApplySpell(attacker, attacker, settings->ArrowRainCooldownSpell);
+                    for (int i = 0; i < 75; i++) {
+                        SKSE::GetTaskInterface()->AddTask([=] {
+                            Conditions::ArrowRain(attacker, attacker, attacker->GetCurrentAmmo(), target, target, a_area, 500, player->GetInfoRuntimeData().pendingPoison);
+                            });                   
+                    }
+                }
+                else {
+                    do_once = true;
+                    for (int i = 0; i < 75; i++) {
+                        SKSE::GetTaskInterface()->AddTask([=] {
+                            Conditions::ArrowRain(attacker, attacker, attacker->GetCurrentAmmo(), target, target, a_area, 500, nullptr);
+                            });                   
+                    }
                 }
             }
-            else {
-                do_once = true;
-                for (int i = 0; i < 75; i++) {
-                    SKSE::GetTaskInterface()->AddTask([=] {
-                        Conditions::ArrowRain(attacker, attacker, attacker->GetCurrentAmmo(), target, target, a_area, 500, nullptr);
-                        });                   
-                }
-            }            
+                        
         }
     }
 

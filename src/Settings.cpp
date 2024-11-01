@@ -101,7 +101,24 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
     const int physic_sparks= 0xA9;
     const int normal_sparks= 0xAA;
 
+    const int multi_shot_perk = 0x0;
+    const int multi_shot_cd_spell = 0x0;
+    const int multi_shot_cd_effect = 0x0;
+    const int arrow_rain_perk = 0x0;
+    const int arrow_rain_cd_spell = 0x0;
+    const int arrow_rain_cd_effect = 0x0; 
+    const int stam_pen_effect = 0x06D;
+
     auto dataHandler = RE::TESDataHandler::GetSingleton();
+
+    //ArrowRainPerk = dataHandler->LookupForm(arrow_rain_perk, FileName)->As<RE::BGSPerk>();
+    //ArrowRainCooldownSpell = dataHandler->LookupForm(arrow_rain_cd_spell, FileName)->As<RE::SpellItem>();
+    //ArrowRainCooldownEffect = dataHandler->LookupForm(arrow_rain_cd_effect, FileName)->As<RE::EffectSetting>();
+
+    //MultiShotPerk = dataHandler->LookupForm(multi_shot_perk, FileName)->As<RE::BGSPerk>();
+    //MultiShotCooldownSpell = dataHandler->LookupForm(multi_shot_cd_spell, FileName)->As<RE::SpellItem>();
+    //MultiShotCooldownEffect = dataHandler->LookupForm(multi_shot_cd_effect, FileName)->As<RE::EffectSetting>();
+
     // Globals:
     StaminaCostGlobal    = dataHandler->LookupForm(stam_cost_global, FileName)->As<RE::TESGlobal>();
     NPCStaminaCostGlobal = dataHandler->LookupForm(npc_stam_cost, FileName)->As<RE::TESGlobal>();
@@ -113,6 +130,7 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
     dummyPerkDodge = dataHandler->LookupForm(DodgePerk, FileName)->As<RE::BGSPerk>();
     // Effects:
     MAG_ParryWindowEffect = dataHandler->LookupForm(ParryWindowEffect, FileName)->As<RE::EffectSetting>();
+    StaminaPenaltyEffect = dataHandler->LookupForm(stam_pen_effect, FileName)->As<RE::EffectSetting>();
     // Spells:
     IsBlockingSpell              = dataHandler->LookupForm(isBlockSpell, FileName)->As<RE::SpellItem>();
     PowerAttackStopSpell         = dataHandler->LookupForm(power_attack_stop, FileName)->As<RE::SpellItem>();

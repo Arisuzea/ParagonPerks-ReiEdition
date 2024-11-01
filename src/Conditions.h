@@ -1,6 +1,8 @@
 #pragma once
 #include "Cache.h"
 #include "Settings.h"
+#include "Hooks.h"
+#include "API/TrueHUDAPI.h"
 #include <numbers>
 
 // Originally intended to just implement some condition functions but iv been placing extensions/utility here as well
@@ -24,8 +26,8 @@ namespace Conditions
 
     inline static float GetPointInRange(double radius, float start_point) 
     {
-        auto r = radius * std::sqrt(GetRandomDouble(0.0, 1.0));
-        auto theta = GetRandomDouble(0.0, 1.0) * 2 * std::numbers::pi_v<float>;
+        float r = radius * std::sqrt((float)GetRandomDouble(0.0f, 1.0f));
+        auto theta = (float)GetRandomDouble(0.0f, 1.0f) * 2.0f * std::numbers::pi_v<float>;
         return start_point + r * std::cos(theta);
     }
 
@@ -69,6 +71,21 @@ namespace Conditions
     {
         auto** singleton{ reinterpret_cast<RE::TESObjectWEAP**>(Cache::getUnarmedWeaponAddress) };
         return *singleton;
+    }
+
+    inline static bool ActorHasActiveEffect(RE::Actor* a_actor, RE::EffectSetting* a_effect) {
+
+        auto               activeEffects = a_actor->AsMagicTarget()->GetActiveEffectList();
+        RE::EffectSetting* setting       = nullptr;
+        for (auto& effect : *activeEffects) {
+            setting = effect ? effect->GetBaseObject() : nullptr;
+            if (setting) {
+                if (setting == a_effect) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     inline static bool PlayerHasActiveMagicEffect(RE::EffectSetting* a_effect)
@@ -266,6 +283,77 @@ namespace Conditions
         return rot_at(to - from);
     }
 
+    inline static void LaunchExtraArrow(RE::Actor* a_actor, RE::TESAmmo* a_ammo, RE::TESObjectWEAP* a_weapon, RE::BSFixedString a_nodeName, std::int32_t a_source, RE::TESObjectREFR* a_target, RE::AlchemyItem* a_poison)
+    {     
+        SKSE::GetTaskInterface()->AddTask([a_actor, a_ammo, a_weapon, a_nodeName, a_source, a_target, a_poison]() {
+            RE::NiAVObject* fireNode = nullptr;
+            auto            root = a_actor->IsPlayerRef() ? a_actor->GetCurrent3D() : a_actor->Get3D2();
+            switch (a_source) {
+            case -1:
+            {
+                if (!a_nodeName.empty()) {
+                    if (root) {
+                        fireNode = root->GetObjectByName(a_nodeName);
+                    }
+                }
+                else {
+                    if (const auto currentProcess = a_actor->GetActorRuntimeData().currentProcess) {
+                        const auto& biped = a_actor->GetBiped2();
+                        fireNode = a_weapon->IsCrossbow() ? currentProcess->GetMagicNode(biped) : currentProcess->GetWeaponNode(biped);
+                    }
+                    else {
+                        fireNode = a_weapon->GetFireNode(root);
+                    }
+                }
+            }
+            break;
+            case 0:
+                fireNode = root ? root->GetObjectByName(RE::FixedStrings::GetSingleton()->npcLMagicNode) : nullptr;
+                break;
+            case 1:
+                fireNode = root ? root->GetObjectByName(RE::FixedStrings::GetSingleton()->npcRMagicNode) : nullptr;
+                break;
+            case 2:
+                fireNode = root ? root->GetObjectByName(RE::FixedStrings::GetSingleton()->npcHeadMagicNode) : nullptr;
+                break;
+            default:
+                break;
+            }
+            RE::NiPoint3                  origin;
+            RE::Projectile::ProjectileRot angles{};
+            if (fireNode) {
+                origin = fireNode->world.translate;
+                a_actor->Unk_A0(fireNode, angles.x, angles.z, origin);
+            }
+            else {
+                origin = a_actor->GetPosition();
+                origin.z += 96.0f;
+
+                angles.x = a_actor->GetAimAngle();
+                angles.z = a_actor->GetAimHeading();
+            }
+
+            RE::ProjectileHandle       handle{};
+            RE::Projectile::LaunchData launchData(a_actor, origin, angles, a_ammo, a_weapon);
+            launchData.desiredTarget = a_target;
+            launchData.poison = a_poison;
+            launchData.enchantItem = a_weapon->formEnchanting;
+            launchData.power = 1.0f;
+            launchData.scale = 1.0f;
+            launchData.alwaysHit = true;
+            launchData.castingSource = RE::MagicSystem::CastingSource::kRightHand;
+            auto projHandle = RE::Projectile::Launch(&handle, launchData);
+            auto proj = projHandle->get().get();
+            proj->GetProjectileRuntimeData().livingTime = 0.000001f;
+            auto& vel = proj->GetProjectileRuntimeData().linearVelocity;
+            auto linearDir = vel;
+            linearDir.Unitize();
+            vel = linearDir * 2000;
+            //auto arr = Hooks::LaunchArrowHook::LaunchArrow(a_ammo->GetRuntimeData().data.projectile->As<RE::ArrowProjectile>(), &launchData);
+            });
+
+    }
+
     inline static void ArrowRain(RE::Actor* a_shooterForLevel, RE::Actor* a_Source, RE::TESAmmo* a_arrow, RE::Actor* start_actor, RE::Actor* target, int range, float extra_height, RE::AlchemyItem* a_poison)
     {
         
@@ -284,7 +372,6 @@ namespace Conditions
 
         auto rot = rot_at(StartPos, EndPos);
 
-        auto arrows = a_arrow;
         RE::Projectile::LaunchData ldata;
         ldata.origin                = StartPos;
         ldata.contactNormal         = { 0.0f, 0.0f, 0.0f };
@@ -305,7 +392,7 @@ namespace Conditions
         ldata.pad7C                 = 0;
         ldata.enchantItem           = nullptr;
         ldata.poison                = a_poison;
-        ldata.area                  = 0.0f;
+        ldata.area                  = 0;
         ldata.power                 = 1.0f;
         ldata.scale                 = 1.0f;
         ldata.alwaysHit             = false;
@@ -471,4 +558,38 @@ namespace Conditions
             caster->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->CastSpellImmediate(spell, false, target, 1.0F, false, 0.0F, nullptr);
         }
     }
+
+    class APIuse
+    {
+        
+    public: 
+        TRUEHUD_API::IVTrueHUD3* ersh_TrueHUD = nullptr;
+        static APIuse* GetSingleton()
+        {
+            static APIuse singleton;
+            return  std::addressof(singleton);
+        }
+        
+    };
+    inline void greyoutAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {
+        if (!Settings::TrueHudAPI_Obtained) {
+            return;
+        }
+        auto ersh = APIuse::GetSingleton()->ersh_TrueHUD;
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor, 0xd72a2a);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor, 0x7d7e7d);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor, 0xb30d10);
+    }
+
+    inline void revertAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {
+        if (!Settings::TrueHudAPI_Obtained) {
+            return;
+        }
+        auto ersh = APIuse::GetSingleton()->ersh_TrueHUD;
+        ersh->RevertBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor);
+        ersh->RevertBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor);
+        ersh->RevertBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor);
+    }
+    
+
 }; // namespace Conditions

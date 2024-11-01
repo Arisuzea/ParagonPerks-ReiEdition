@@ -34,28 +34,26 @@ inline void AnimationGraphEventHandler::ProcessEvent(RE::BSTEventSink<RE::BSAnim
     const char* HitString   = "HitFrame";
     const char* DodgeString = "TKDR_DodgeStart"; // Test to make stuff while dodging
     const char* BFCORec = "MCO_Recovery";
-
+    const char* BowShoot = "BowRelease";
+    Settings* settings = Settings::GetSingleton();
     if (!a_event) {
         return;
     }
-
-    if (!a_event->tag.empty() && a_event->holder && a_event->holder->As<RE::Actor>())
+    // DOES NOT WORK YET
+    /*if (!a_event->tag.empty() && a_event->holder && a_event->holder->As<RE::Actor>())
     {
-        if (std::strcmp(a_event->tag.c_str(), BFCORec) == 0) {
-            logger::debug("BFCO Recovery Hit");
-            RE::BSTSmartPointer<RE::BSAnimationGraphManager> animationGraphManagerPtr;
-            a_event->holder->As<RE::Actor>()->GetAnimationGraphManager(animationGraphManagerPtr);
-            if (animationGraphManagerPtr) {
-                int num = 0;
-                auto& animationGraph = animationGraphManagerPtr->graphs;
-                for (auto& anim : animationGraph) {
-                    logger::debug("graph {} is {}", num, anim->projectName);
-                    ++num;
-                }                
-            }
+        if (std::strcmp(a_event->tag.c_str(), BowShoot) == 0) {
+            logger::debug("Bow Shoot event");
+            RE::Actor* shooter = const_cast<RE::TESObjectREFR*>(a_event->holder)->As<RE::Actor>();
+            if (shooter->HasPerk(settings->dummyPerkDodge)) {
+                if (auto targ = shooter->GetActorRuntimeData().currentCombatTarget.get().get(); targ) {
+                    dlog("target is {}", targ->GetDisplayFullName());
+                }
+                
+                Conditions::LaunchExtraArrow(shooter, shooter->GetCurrentAmmo(), Conditions::getWieldingWeapon(shooter), "", -1, shooter->GetActorRuntimeData().currentCombatTarget.get().get(), nullptr);
+            }            
         }
-    }
-
+    }*/
 
     if (!a_event->tag.empty() && a_event->holder && a_event->holder->As<RE::Actor>()) {
         // debug logging to catch any animation event. used for potential new events

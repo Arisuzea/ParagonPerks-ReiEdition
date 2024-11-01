@@ -48,4 +48,5 @@ namespace Hooks
         return BashBlockStaminaPatch::InstallBashMultHook();
     }
 
+
 } // namespace Hooks

@@ -12,6 +12,9 @@ namespace Hooks
     inline REL::Relocation<uintptr_t>             arrow_release_handler{ REL::RelocationID(41778, 42859), REL::Relocate(0x133, 0x138) };
     static REL::Relocation<std::uintptr_t>        armorRating1(REL::RelocationID(42842, 44014));
     static REL::Relocation<std::uintptr_t>        armorRating2(REL::RelocationID(37605, 38558));
+    inline static REL::Relocation<std::uintptr_t> launchArrow(REL::RelocationID(17693, 18102), REL::VariantOffset(0xE82, 0xe60, 0xE82));
+
+
 
     // Valhalla Combat                               May be used later for a timed dodge cooldown mechanic
     // inline static float*                          g_deltaTime         = (float*)RELOCATION_ID(523660, 410199).address(); // 2F6B948
@@ -19,5 +22,4 @@ namespace Hooks
 
     bool InstallHooks();
     bool InstallBashMultHook();
-
 } // namespace Hooks
