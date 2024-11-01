@@ -73,3 +73,7 @@ xmake require --upgrade
 * This DLL includes code from [dTry's](https://github.com/D7ry) DLL for [Valhalla Combat](https://github.com/D7ry/valhallaCombat) and [colinswrath's](https://github.com/colinswrath) DLL for [Hand to Hand](https://github.com/colinswrath/handtohand) by SimonMagus.
 * [CharmedBaron](https://github.com/CharmedBaryon) for Commonlib-NG.
 * [Alandtse](https://github.com/alandtse) for Clib-VR with NG branch.
+* Ersh for TrueHUD and the color reading function
+* Fenix for updateNPC Hook
+* po3 for various functions in Conditions.h 
+* (probably not a full list, but it's not a finished mod yet either)
