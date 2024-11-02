@@ -42,7 +42,7 @@ namespace Hooks
         ActorUpdateHook::InstallUpdateActor();
         CombatHit::Install();
         BowHit::Install();
-
+        AdjustActiveEffect::Install();
         return true;
     }
 
@@ -74,28 +74,10 @@ namespace Hooks
     }
     void CombatHit::Install()
     {
-        
         auto& trampoline = SKSE::GetTrampoline();
         REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(42832, 44001), REL::VariantOffset(0x1a5, 0x1a4, 0x1a5) };
         _originalCall = trampoline.write_call<5>(target.address(), &PitFighter);
-
-
-        ////SE: 140628C20 - 37673
-
-        //auto& trampoline = SKSE::GetTrampoline();
-        //REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(37673, 38627), REL::VariantOffset(0x3c0, 0x4A8, 0x3c0) };
-        //_originalCall = trampoline.write_call<5>(target.address(), &CHit);
     }
-
-    /*
-    public:
-		static void Hook()
-		{
-            _get_damage = SKSE::GetTrampoline().write_call<5>((RELOCATION_ID(42832, 44001), REL::VariantOffset(0x1a5, 0x1a4, 0x1a5).address), get_damage);  // SkyrimSE.exe+7429F5
-		}
-
-        FENIX
-    */
 
     float CombatHit::PitFighter(void* _weap, RE::ActorValueOwner* a, float DamageMult, char isbow)
     {
@@ -117,12 +99,12 @@ namespace Hooks
                     logger::debug("started hooked damage calc: {} was hit with {}", actor->GetName(), DamageMult);
                     std::int32_t enemyNum = Conditions::NumNearbyActors(player, 500.0f, false);
                     dlog("{} is surrounded by {} enemies", player->GetDisplayFullName(), (int)enemyNum);
-                    if (enemyNum == 2)
-                        dam *= 1.15f;
+                    if (enemyNum <= 2)
+                        dam *= Settings::dmgModifierMinEnemy;
                     if (enemyNum == 3)
-                        dam *= 1.30f;
+                        dam *= Settings::dmgModifierMidEnemy;
                     if (enemyNum >= 4)
-                        dam *= 1.50f;
+                        dam *= Settings::dmgModifierMaxEnemy;
                     logger::debug("new damage for melee is {}. Original damage was: {} \n", dam, DamageMult); 
                     return dam;
                 }              
@@ -130,18 +112,6 @@ namespace Hooks
         }
         return dam;
     }
-
-
-
-    /*
-    
-    __ ADDRESS AND OFFSET __
-    SE ID: 42928 SE Offset: 0x604
-    AE ID: 44108 AE Offset: 0x5d6 (Heuristic)
-    
-    */
-
-
 
     void BowHit::Install()
     {
@@ -159,26 +129,64 @@ namespace Hooks
         dlog("sanity check");
         dlog("a1 is {}", a1);
         dlog("a2 is {}", a2);
-        dlog("pig fighter bow is hooked. dam is: {}", dam);
+        dlog("pit fighter bow is hooked. dam is: {}", dam);
         if (player->IsInCombat() && player->HasPerk(settings->dummyPerkDodge) && player->IsAttacking()) {
             std::int32_t enemyNum = Conditions::NumNearbyActors(player, 500.0f, false);
             dlog("sanity check, enemy number is {}", enemyNum);
             if (enemyNum >= 4) {                
-                dam *= 1.15f;
+                dam *= Settings::dmgModifierMinEnemy;
                 dlog("return with more than 4 enemies, dam is {}", dam);
             }                
             if (enemyNum == 3){
-                dam *= 1.30f;
+                dam *= Settings::dmgModifierMidEnemy;
                 dlog("return with 3 enemies, dam is {}", dam);
             }                
             if (enemyNum <= 2 ) {
-                dam *= 1.50f;
-                dlog("return with 2 enemies, dam is {}", dam);
+                dam *= Settings::dmgModifierMaxEnemy;
+                dlog("return with 2 or less enemies, dam is {}", dam);
             }                
             return dam;
         }
         dlog("return without modifying");
         return dam;
     }
+
+    void AdjustActiveEffect::AdjustSpells(RE::ActiveEffect* a_this, float a_power, bool a_onlyHostile)
+    {
+        const auto attacker = a_this->GetCasterActor();
+        const auto target = a_this->GetTargetActor();
+        const auto effect = a_this->GetBaseObject();
+        const auto spell = a_this->spell;
+
+        if (attacker && target && spell && effect && effect->IsHostile()) {
+            if (const auto projectile = effect->data.projectileBase; projectile) {
+                auto dam = a_this->magnitude;
+                std::int32_t enemyNum = Conditions::NumNearbyActors(attacker.get(), 500.0f, false);
+                dlog("sanity check, enemy number is {}", enemyNum);
+                if (enemyNum >= 4) {                
+                    dam *= Settings::dmgModifierMinEnemy;
+                    dlog("return with more than 4 enemies, dam is {}", dam);
+                }                
+                if (enemyNum == 3){
+                    dam *= Settings::dmgModifierMidEnemy;
+                    dlog("return with 3 enemies, dam is {}", dam);
+                }                
+                if (enemyNum <= 2 ) {
+                    dam *= Settings::dmgModifierMaxEnemy;
+                    dlog("return with 2 or less enemies, dam is {}", dam);
+                }
+                a_this->magnitude = dam;
+            }
+        }
+        func(a_this, a_power, a_onlyHostile);
+    }
+    void AdjustActiveEffect::Install()
+    {
+        auto& trampoline = SKSE::GetTrampoline();
+        REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(33763, 34547), REL::Relocate(0x4A3, 0x656, 0x427)  }; // MagicTarget::CheckAddEffect
+        func = trampoline.write_call<5>(target.address(), &AdjustSpells);
+    }
+
+
 
 } // namespace Hooks

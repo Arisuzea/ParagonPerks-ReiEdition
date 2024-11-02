@@ -47,4 +47,14 @@ namespace Hooks
         static inline REL::Relocation<decltype(&PitFighterBow)> _originalCall;
     };
 
+    class AdjustActiveEffect
+    {
+    public:        
+        static void Install();
+
+    private:
+        static void AdjustSpells(RE::ActiveEffect* a_this, float a_power, bool a_onlyHostile);
+        static inline REL::Relocation<decltype(&AdjustSpells)> func;
+    };
+
 } // namespace Hooks

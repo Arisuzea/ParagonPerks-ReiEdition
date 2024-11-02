@@ -80,7 +80,9 @@ public:
     static inline uint32_t               dualBlockKey;
     static inline std::string colorCodeStaminaPenalty;
     static inline uint32_t uColorCodeStamBar = 0xDF2020;
-
+    static inline float dmgModifierMaxEnemy = 1.5f;
+    static inline float dmgModifierMidEnemy = 1.3f;
+    static inline float dmgModifierMinEnemy = 1.15f;
     static inline bool TrueHudAPI_Obtained;
 
     // tests
