@@ -29,7 +29,7 @@ void Settings::LoadSettings()
     (bonusXP < 0.0 || bonusXP > 100.0) ? BonusXPPerLevel = 0.15f : BonusXPPerLevel = bonusXP;
     baseXP < 0.0 ? BaseXP = 3.0f : BaseXP = baseXP;
 
-    FileName = "ValorPerks.esp";
+    FileName = "ParagonPerks.esp";
 
     if (debug_logging) {
         spdlog::get("Global")->set_level(spdlog::level::level_enum::debug);
