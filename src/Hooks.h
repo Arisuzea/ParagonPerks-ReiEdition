@@ -36,9 +36,15 @@ namespace Hooks
         static void Install();
 
     private:
-        static void PitFighter(RE::Actor* a_this, RE::HitData* a_hitData);
-        static void CHit(RE::Actor* a_this, RE::HitData* a_hitData);
-        static inline REL::Relocation<decltype(&CHit)> _originalCall;
+        static float PitFighter(void* _weap, RE::ActorValueOwner* a, float DamageMult, char isbow);
+        static inline REL::Relocation<decltype(&PitFighter)> _originalCall;
+    };
+    class BowHit {
+    public:
+        static void Install();
+    private:
+        static float PitFighterBow(float a1, float a2);
+        static inline REL::Relocation<decltype(&PitFighterBow)> _originalCall;
     };
 
 } // namespace Hooks

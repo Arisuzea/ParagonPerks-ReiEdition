@@ -41,6 +41,7 @@ namespace Hooks
         }
         ActorUpdateHook::InstallUpdateActor();
         CombatHit::Install();
+        BowHit::Install();
 
         return true;
     }
@@ -73,65 +74,111 @@ namespace Hooks
     }
     void CombatHit::Install()
     {
-        //SE: 140628C20 - 37673
+        
         auto& trampoline = SKSE::GetTrampoline();
-        REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(37673, 38627), REL::VariantOffset(0x3c0, 0x4A8, 0x3c0) };
-        _originalCall = trampoline.write_call<5>(target.address(), &CHit);
+        REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(42832, 44001), REL::VariantOffset(0x1a5, 0x1a4, 0x1a5) };
+        _originalCall = trampoline.write_call<5>(target.address(), &PitFighter);
+
+
+        ////SE: 140628C20 - 37673
+
+        //auto& trampoline = SKSE::GetTrampoline();
+        //REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(37673, 38627), REL::VariantOffset(0x3c0, 0x4A8, 0x3c0) };
+        //_originalCall = trampoline.write_call<5>(target.address(), &CHit);
     }
 
     /*
     public:
 		static void Hook()
 		{
-			_get_damage = SKSE::GetTrampoline().write_call<5>(REL::ID(42832).address() + 0x1a5, get_damage);  // SkyrimSE.exe+7429F5
+            _get_damage = SKSE::GetTrampoline().write_call<5>((RELOCATION_ID(42832, 44001), REL::VariantOffset(0x1a5, 0x1a4, 0x1a5).address), get_damage);  // SkyrimSE.exe+7429F5
 		}
 
         FENIX
     */
 
-    void CombatHit::PitFighter(RE::Actor* a_this, RE::HitData* a_hitData)
+    float CombatHit::PitFighter(void* _weap, RE::ActorValueOwner* a, float DamageMult, char isbow)
     {
+        dlog("hook started");
         const Settings* settings = Settings::GetSingleton();
+        RE::PlayerCharacter* player = Cache::GetPlayerSingleton();
+        RE::Actor* actor = skyrim_cast<RE::Actor*>(a);
 
-        if (a_this->HasPerk(settings->dummyPerkDodge)) {
-            float remaining = a_hitData->totalDamage;
-            if (a_hitData->weapon && Conditions::NumNearbyActors(a_this, 500.0f, true) > 0) {
-                if (!a_hitData->weapon->IsBow() && !a_hitData->weapon->IsCrossbow()) {
+        auto dam = _originalCall(_weap, a, DamageMult, isbow);
+        if (player->HasPerk(settings->dummyPerkDodge)) {
+            if (actor != player) {
+                return dam;
+            }
+
+            if (Conditions::NumNearbyActors(player, 500.0f, false) > 0) {
+                dlog("first condition cehck, there are {} enemies", Conditions::NumNearbyActors(player, 500.0f, false));
+                if (!isbow) {
                     logger::debug("----------------------------------------------------");
-                    logger::debug("started hooked damage calc: {} was hit by {} with {}", a_this->GetName(), a_hitData->aggressor.get().get()->GetDisplayFullName(),a_hitData->weapon->GetName());
-                    std::int32_t enemyNum = Conditions::NumNearbyActors(a_this, 500.0f, false);
-                    dlog("{} is surrounded by {} enemies", a_this->GetDisplayFullName(), (int)enemyNum);
+                    logger::debug("started hooked damage calc: {} was hit with {}", actor->GetName(), DamageMult);
+                    std::int32_t enemyNum = Conditions::NumNearbyActors(player, 500.0f, false);
+                    dlog("{} is surrounded by {} enemies", player->GetDisplayFullName(), (int)enemyNum);
                     if (enemyNum == 2)
-                        remaining *= 2.0f;
+                        dam *= 1.15f;
                     if (enemyNum == 3)
-                        remaining *= 5.30f;
+                        dam *= 1.30f;
                     if (enemyNum >= 4)
-                        remaining *= 11.5;
-                    logger::debug("new damage for melee is {}. Original damage was: {} \n", remaining, a_hitData->totalDamage);
-                    _originalCall(a_this, a_hitData);
-                    a_hitData->totalDamage = remaining;
-                }
-                else if (a_hitData->weapon->IsBow() || a_hitData->weapon->IsCrossbow()) {
-                    logger::debug("started hooked damage calc: {} has hit {} with {}", a_this->GetName(), a_hitData->aggressor.get().get()->GetDisplayFullName(), a_hitData->weapon->GetName());
-                    std::int32_t enemyNum = Conditions::NumNearbyActors(a_this, 500.0f, true);
-                    if (enemyNum == 1)
-                        remaining *= 1.5f;
-                    if (enemyNum == 2)
-                        remaining *= 1.30f;
-                    if (enemyNum >= 3)
-                        remaining *= 1.15;
-                    logger::debug("new damage for melee is {}. Original damage was: {} \n", remaining, a_hitData->totalDamage);
-                    _originalCall(a_this, a_hitData);
-                    a_hitData->totalDamage = remaining;
-                }
-                
+                        dam *= 1.50f;
+                    logger::debug("new damage for melee is {}. Original damage was: {} \n", dam, DamageMult); 
+                    return dam;
+                }              
             }
         }
+        return dam;
     }
-    void CombatHit::CHit(RE::Actor* a_this, RE::HitData* a_hitData)
+
+
+
+    /*
+    
+    __ ADDRESS AND OFFSET __
+    SE ID: 42928 SE Offset: 0x604
+    AE ID: 44108 AE Offset: 0x5d6 (Heuristic)
+    
+    */
+
+
+
+    void BowHit::Install()
     {
-        PitFighter(a_this, a_hitData);
-        _originalCall(a_this, a_hitData);
+        auto& trampoline = SKSE::GetTrampoline();
+        REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(42928, 44108), REL::VariantOffset(0x604, 0x5d6, 0x604) };
+        _originalCall = trampoline.write_call<5>(target.address(), &PitFighterBow);
+
+    }
+
+    float BowHit::PitFighterBow(float a1, float a2)
+    {
+        RE::PlayerCharacter* player = Cache::GetPlayerSingleton();
+        Settings* settings = Settings::GetSingleton();
+        auto dam = _originalCall(a1, a2);
+        dlog("sanity check");
+        dlog("a1 is {}", a1);
+        dlog("a2 is {}", a2);
+        dlog("pig fighter bow is hooked. dam is: {}", dam);
+        if (player->IsInCombat() && player->HasPerk(settings->dummyPerkDodge) && player->IsAttacking()) {
+            std::int32_t enemyNum = Conditions::NumNearbyActors(player, 500.0f, false);
+            dlog("sanity check, enemy number is {}", enemyNum);
+            if (enemyNum >= 4) {                
+                dam *= 1.15f;
+                dlog("return with more than 4 enemies, dam is {}", dam);
+            }                
+            if (enemyNum == 3){
+                dam *= 1.30f;
+                dlog("return with 3 enemies, dam is {}", dam);
+            }                
+            if (enemyNum <= 2 ) {
+                dam *= 1.50f;
+                dlog("return with 2 enemies, dam is {}", dam);
+            }                
+            return dam;
+        }
+        dlog("return without modifying");
+        return dam;
     }
 
 } // namespace Hooks

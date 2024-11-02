@@ -240,7 +240,7 @@ namespace Conditions
 
                 if (!result.empty()) {
                     for (const auto& enemy : result) {
-                        if (enemy) {
+                        if (enemy && !enemy->IsDead()) {
                             num_result++;
                         }
                     }

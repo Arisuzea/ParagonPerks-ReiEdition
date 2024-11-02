@@ -69,8 +69,7 @@ public:
                 }*/               
             }
             if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target && !a_event->projectile) {
-                logger::debug;
-                ("entered block event");
+                logger::debug("entered block event");
                 auto attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
                 if (!defender || !attacking_weap || !defender->GetActorRuntimeData().currentProcess || !defender->GetActorRuntimeData().currentProcess->high
                     || !attacking_weap->IsMelee() || !defender->Get3D())
