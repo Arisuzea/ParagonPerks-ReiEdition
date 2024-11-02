@@ -1,4 +1,4 @@
-# Valor Perks 
+# Paragon Perks 
 ## Features:
 
 **Adds specified spells in ini for the following scenarios:**  
