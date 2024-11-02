@@ -123,6 +123,7 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
     const int arrow_rain_cd_effect = 0x0; 
     const int stam_pen_effect = 0x06D;
     const int npc_stam_pen_effect = 0xCD8;
+    const int pit_fighter_perk = 0xC5;
 
     auto dataHandler = RE::TESDataHandler::GetSingleton();
 
@@ -141,7 +142,7 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
     // Perks:
     BashStaminaPerk  = dataHandler->LookupForm(bashStamPerk, "Update.esm")->As<RE::BGSPerk>();
     BlockStaminaPerk = dataHandler->LookupForm(blockStamPerk, "Update.esm")->As<RE::BGSPerk>();
-    //dummyPerkDodge = dataHandler->LookupForm(0x111211, FileName)->As<RE::BGSPerk>(); 
+    PitFighterPerk = dataHandler->LookupForm(pit_fighter_perk, FileName)->As<RE::BGSPerk>();
     dummyPerkDodge = dataHandler->LookupForm(DodgePerk, FileName)->As<RE::BGSPerk>();
     // Effects:
     MAG_ParryWindowEffect = dataHandler->LookupForm(ParryWindowEffect, FileName)->As<RE::EffectSetting>();

@@ -87,7 +87,7 @@ namespace Hooks
         RE::Actor* actor = skyrim_cast<RE::Actor*>(a);
 
         auto dam = _originalCall(_weap, a, DamageMult, isbow);
-        if (player->HasPerk(settings->dummyPerkDodge)) {
+        if (player->HasPerk(settings->PitFighterPerk)) {
             if (actor != player) {
                 return dam;
             }
@@ -130,7 +130,7 @@ namespace Hooks
         dlog("a1 is {}", a1);
         dlog("a2 is {}", a2);
         dlog("pit fighter bow is hooked. dam is: {}", dam);
-        if (player->IsInCombat() && player->HasPerk(settings->dummyPerkDodge) && player->IsAttacking()) {
+        if (player->IsInCombat() && player->HasPerk(settings->PitFighterPerk) && player->IsAttacking()) {
             std::int32_t enemyNum = Conditions::NumNearbyActors(player, 500.0f, false);
             dlog("sanity check, enemy number is {}", enemyNum);
             if (enemyNum >= 4) {                
@@ -157,8 +157,8 @@ namespace Hooks
         const auto target = a_this->GetTargetActor();
         const auto effect = a_this->GetBaseObject();
         const auto spell = a_this->spell;
-
-        if (attacker && target && spell && effect && effect->IsHostile()) {
+        const Settings* settings = Settings::GetSingleton();
+        if (attacker && attacker->HasPerk(settings->PitFighterPerk) && target && spell && effect && effect->IsHostile()) {
             if (const auto projectile = effect->data.projectileBase; projectile) {
                 auto dam = a_this->magnitude;
                 std::int32_t enemyNum = Conditions::NumNearbyActors(attacker.get(), 500.0f, false);

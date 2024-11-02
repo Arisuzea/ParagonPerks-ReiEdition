@@ -37,6 +37,7 @@ public:
     RE::BGSPerk* BlockStaminaPerk;
     RE::BGSPerk* ArrowRainPerk;
     RE::BGSPerk* MultiShotPerk;
+    RE::BGSPerk* PitFighterPerk;
     // Explosions (Sparks)
     RE::BGSExplosion* APOSparks;
     RE::BGSExplosion* APOSparksPhysics;
