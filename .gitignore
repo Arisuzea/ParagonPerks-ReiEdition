@@ -4,6 +4,7 @@
 .xmake/
 
 # folders
+contrib/
 build/
 vs*/
 lib/test*
