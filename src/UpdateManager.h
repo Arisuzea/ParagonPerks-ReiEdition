@@ -41,7 +41,6 @@ private:
             if (!Conditions::PlayerHasActiveMagicEffect(settings->StaminaPenaltyEffect)) {
                 Conditions::revertAvMeter(player, RE::ActorValue::kStamina);
             }
-
             if (player->IsGodMode()) {
                 if (settings->IsCastingSpell)
                     player->RemoveSpell(settings->IsCastingSpell);

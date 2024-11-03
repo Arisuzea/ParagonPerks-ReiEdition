@@ -49,21 +49,19 @@ inline void AnimationGraphEventHandler::ProcessEvent(RE::BSTEventSink<RE::BSAnim
                 if (auto targ = shooter->GetActorRuntimeData().currentCombatTarget.get().get(); targ) {
                     dlog("target is {}", targ->GetDisplayFullName());
                 }
-                
+                //arrows don't get the full draw speed so they basically just fall
                 Conditions::LaunchExtraArrow(shooter, shooter->GetCurrentAmmo(), Conditions::getWieldingWeapon(shooter), "", -1, shooter->GetActorRuntimeData().currentCombatTarget.get().get(), nullptr);
             }            
         }
     }*/
 
     if (!a_event->tag.empty() && a_event->holder && a_event->holder->As<RE::Actor>()) {
-        // debug logging to catch any animation event. used for potential new events
-        //dlog("--- [ANIMATION EVENT] --- Animation Event is {} \n \n ", a_event->tag);
+
         if (std::strcmp(a_event->tag.c_str(), HitString) == 0) {
             if (a_event->holder->As<RE::Actor>()) {
                 RE::PlayerCharacter* player         = Cache::GetPlayerSingleton();
                 auto                 actor          = const_cast<RE::TESObjectREFR*>(a_event->holder)->As<RE::Actor>();
                 auto                 wieldedWeap    = Conditions::getWieldingWeapon(actor);
-                const Settings*      settings       = Settings::GetSingleton();
                 RE::TESGlobal*       stamGlob       = settings->StaminaCostGlobal;
                 auto                 global         = stamGlob->value;
                 auto                 npc_glob       = settings->NPCStaminaCostGlobal->value;
@@ -138,7 +136,6 @@ inline void AnimationGraphEventHandler::ProcessEvent(RE::BSTEventSink<RE::BSAnim
     if (!a_event->tag.empty() && a_event->holder && a_event->holder->As<RE::Actor>()) {
         if (std::strcmp(a_event->tag.c_str(), DodgeString) == 0) {
             if (a_event->holder->As<RE::Actor>()) {
-                const Settings* settings = Settings::GetSingleton();
                 if (a_event->holder->As<RE::Actor>()->HasPerk(settings->dummyPerkDodge)) {
                     logger::debug("Dodge happened");
                     RE::PlayerCharacter* player   = Cache::GetPlayerSingleton();

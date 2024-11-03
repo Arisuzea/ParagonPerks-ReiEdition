@@ -6,12 +6,13 @@ public:
     static Settings* GetSingleton();
 
     void LoadSettings();
-    void LoadForms();
+    void LoadForms() ;
     void AdjustWeaponStaggerVals();
-    void GetIngameData();
+    void GetIngameData() noexcept;
     void SetGlobalsAndGameSettings();  
     void LoadMCMSettings();
-    void ReadColorStringSetting(CSimpleIniA& a_ini, const char* a_sectionName, const char* a_settingName, uint32_t& a_setting);
+    static void ReadColorStringSetting(CSimpleIniA& a_ini, const char* a_sectionName, const char* a_settingName, uint32_t& a_setting);
+    void logFormLoad(std::string form_name, RE::TESForm* a_form);
 
     // Spells
     RE::SpellItem* IsAttackingSpell;
@@ -66,7 +67,7 @@ public:
     bool               armorScalingEnabled;
     bool               IsBlockingWeaponSpellCasted = false;
     bool               wasPowerAttacking           = false;
-    inline static bool debug_logging{};
+    bool               debug_logging{};
     // floats
     inline static float BonusXPPerLevel;
     inline static float BaseXP;
@@ -79,8 +80,12 @@ public:
     inline static uint32_t blockKeyGamePad{ 0xFF };
     int                    maxFrameCheck = 6;
     static inline uint32_t               dualBlockKey;
-    static inline std::string colorCodeStaminaPenalty;
-    static inline uint32_t uColorCodeStamBar = 0xDF2020;
+    static inline std::string sColorCodeStaminaPenalty;
+    static inline std::string sColorCodeStaminaFlash;
+    static inline std::string sColorCodeStaminaPhantom;
+    static inline uint32_t uColorCodeStamBar = 0x7d7e7d;
+    static inline uint32_t uColorCodeStamFlash = 0xd72a2a;
+    static inline uint32_t uColorCodePhantom = 0xb30d10;
     static inline float dmgModifierMaxEnemy = 1.5f;
     static inline float dmgModifierMidEnemy = 1.3f;
     static inline float dmgModifierMinEnemy = 1.15f;

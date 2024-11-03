@@ -41,16 +41,29 @@ void Settings::LoadSettings()
 void Settings::LoadMCMSettings()
 {
     logger::info("loading MCM settings...");
-    CSimpleIniA ini;
-    ini.SetUnicode();
-    ini.LoadFile(L"(.\"Data\MCM\Config\ValorPerks\settings.ini");
 
+    constexpr auto defaultSettingsPath = R"(.\Data\MCM\Config\ParagonPerks\settings.ini)";
+    constexpr auto mcmPath = R"(.\Data\MCM\Settings\ParagonPerks.ini)";
 
-    ReadColorStringSetting(ini, "General", "colorCodeStaminaPenalty", uColorCodeStamBar);
-    dualBlockKey = std::stoi(ini.GetValue("General", "iDualBlockKey", "48"));
+    const auto readMCM = [&](std::filesystem::path path) {
+        CSimpleIniA mcm;
+        mcm.SetUnicode();
+        mcm.LoadFile(path.string().c_str());
 
+        ReadColorStringSetting(mcm, "Colors", "sColorCodeStaminaPenalty", uColorCodeStamBar);        
+        ReadColorStringSetting(mcm, "Colors", "sColorCodeStaminaFlash", uColorCodeStamFlash);
+        ReadColorStringSetting(mcm, "Colors", "sColorCodeStaminaPhantom", uColorCodePhantom);
+        dualBlockKey = std::stoi(mcm.GetValue("General", "iDualBlockKey", "48"));
+        dlog("dual block key is {}", dualBlockKey);
+        };
+    logger::info("Reading MCM .ini...");
+
+    readMCM(defaultSettingsPath); // read the default ini first
+    readMCM(mcmPath);
 
 }
+
+
 
 RE::FormID Settings::ParseFormID(const std::string& str)
 {
@@ -80,13 +93,8 @@ void Settings::AdjustWeaponStaggerVals()
     }
 }
 
-void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simpler for users
+void Settings::GetIngameData() noexcept // hard coded FormIDs to keep the ini file simpler for users
 {
-    /*CSimpleIniA ini;
-    ini.SetUnicode();
-    ini.LoadFile(R"(.\Data\SKSE\Plugins\paragon-form-lookup.ini)");*/
-
-
     //forms for ini:
     const int stam_cost_global = 0x25C;
     const int npc_stam_cost = 0x25D;
@@ -114,14 +122,14 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
     const int weapon_sparks= 0xAB;
     const int physic_sparks= 0xA9;
     const int normal_sparks= 0xAA;
-
-    const int multi_shot_perk = 0x0;
+    //Not implemented (yet?)
+ /*   const int multi_shot_perk = 0x0;
     const int multi_shot_cd_spell = 0x0;
     const int multi_shot_cd_effect = 0x0;
     const int arrow_rain_perk = 0x0;
     const int arrow_rain_cd_spell = 0x0;
-    const int arrow_rain_cd_effect = 0x0; 
-    const int stam_pen_effect = 0x06D;
+    const int arrow_rain_cd_effect = 0x0; */
+    const int stam_pen_effect = 0x6D;
     const int npc_stam_pen_effect = 0xCD8;
     const int pit_fighter_perk = 0xC5;
 
@@ -148,6 +156,7 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
     MAG_ParryWindowEffect = dataHandler->LookupForm(ParryWindowEffect, FileName)->As<RE::EffectSetting>();
     StaminaPenaltyEffect = dataHandler->LookupForm(stam_pen_effect, FileName)->As<RE::EffectSetting>();
     StaminaPenEffectNPC = dataHandler->LookupForm(npc_stam_pen_effect, FileName)->As<RE::EffectSetting>();
+
     // Spells:
     IsBlockingSpell              = dataHandler->LookupForm(isBlockSpell, FileName)->As<RE::SpellItem>();
     PowerAttackStopSpell         = dataHandler->LookupForm(power_attack_stop, FileName)->As<RE::SpellItem>();
@@ -178,17 +187,15 @@ void Settings::GetIngameData() // hard coded FormIDs to keep the ini file simple
 
 
 
-void Settings::LoadForms()
-{
-    auto dataHandler = RE::TESDataHandler::GetSingleton();
-    
+void Settings::LoadForms() 
+{    
     GetIngameData();
     SetGlobalsAndGameSettings();
 
     auto gameSettings = RE::GameSettingCollection::GetSingleton();
     blockAngleSetting = gameSettings->GetSetting("fCombatHitConeAngle")->GetFloat();
 
-    dualBlockKey = DualBlockKey->value;
+    dualBlockKey = (std::uint32_t)DualBlockKey->value;
 
     logger::info("All Forms loaded");
 }
@@ -203,7 +210,6 @@ void Settings::SetGlobalsAndGameSettings()
         logger::info("Setting max armor rating from {} to 90", maxRatingSetting->data.f);
         
         maxRatingSetting->data.f = 90.0f;
-        logger::debug("donezo");
         return;
     }
     else {
@@ -212,25 +218,24 @@ void Settings::SetGlobalsAndGameSettings()
         return;
     } 
 }
+// TrueHUD 
 void Settings::ReadColorStringSetting(CSimpleIniA& a_ini, const char* a_sectionName, const char* a_settingName, uint32_t& a_setting)
 {
-    const char* value = nullptr;
     constexpr std::string_view prefix1 = "0x";
     constexpr std::string_view prefix2 = "#";
     constexpr std::string_view cset = "0123456789ABCDEFabcdef";
-
-    value = a_ini.GetValue(a_sectionName, a_settingName);
+    const char* value = a_ini.GetValue(a_sectionName, a_settingName);
     if (value) {
         std::string_view str = value;
+        if (str.contains(value)) {
+        }
 
         if (str.starts_with(prefix1)) {
             str.remove_prefix(prefix1.size());
         }
-
         if (str.starts_with(prefix2)) {
             str.remove_prefix(prefix2.size());
         }
-
         bool bMatches = std::strspn(str.data(), cset.data()) == str.size();
 
         if (bMatches) {
@@ -240,7 +245,7 @@ void Settings::ReadColorStringSetting(CSimpleIniA& a_ini, const char* a_sectionN
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();
             auto vm = skyrimVM ? skyrimVM->impl : nullptr;
             if (vm) {
-                RE::BSFixedString modName{ "ValorPerks" };
+                RE::BSFixedString modName{ "ParagonPerks" };
                 std::string settingStr = a_settingName;
                 settingStr.append(":");
                 settingStr.append(a_sectionName);
@@ -253,6 +258,11 @@ void Settings::ReadColorStringSetting(CSimpleIniA& a_ini, const char* a_sectionN
             }
         }
     }
+}
+
+void Settings::logFormLoad(std::string form_name, RE::TESForm* a_form)
+{
+    logger::debug("{} loaded it is: {}", form_name, a_form->GetName());
 }
 
 

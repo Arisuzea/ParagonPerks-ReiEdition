@@ -4,8 +4,6 @@
 #include "Conditions.h"
 #include "Settings.h"
 
-#define continueEvent RE::BSEventNotifyControl::kContinue
-
 namespace Input
 {
     class HotkeyManager

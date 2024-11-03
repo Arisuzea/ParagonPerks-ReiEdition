@@ -74,6 +74,6 @@ xmake require --upgrade
 * [CharmedBaron](https://github.com/CharmedBaryon) for Commonlib-NG.
 * [Alandtse](https://github.com/alandtse) for Clib-VR with NG branch.
 * Ersh for TrueHUD and the color reading function
-* Fenix for updateNPC Hook
-* po3 for various functions in Conditions.h 
+* Fenix for updateNPC Hook and getDamage hook for melee weapons
+* po3 for various functions in Conditions.h and the magic damage hook in hooks.h
 * (probably not a full list, but it's not a finished mod yet either)

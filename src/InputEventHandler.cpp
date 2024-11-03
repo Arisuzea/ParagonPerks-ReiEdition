@@ -6,7 +6,7 @@ namespace
     {
     public:
         explicit HotkeyContext(const Settings* settings)
-            : hotkeyDual(settings->DualBlockKey->value), hotkey(settings->blockKeyKeyboard), hotkeyMouse(settings->blockKeyMouse), hotkeyGamepad(settings->blockKeyGamePad)
+            : hotkeyDual(settings->dualBlockKey), hotkey(settings->blockKeyKeyboard), hotkeyMouse(settings->blockKeyMouse), hotkeyGamepad(settings->blockKeyGamePad)
         {
         }
 

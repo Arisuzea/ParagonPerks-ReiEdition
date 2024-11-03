@@ -5,7 +5,6 @@ RE::BSEventNotifyControl MenuEventHandler::MenuEvent::ProcessEvent(const RE::Men
     auto            input_event  = Input::InputEventSink::GetSingleton();
     auto            journal_menu = RE::JournalMenu::MENU_NAME;
     Settings* const settings     = Settings::GetSingleton();
-    RE::UI*         menu         = RE::UI::GetSingleton();
 
     if (!event) {
         return continueEvent;
@@ -13,16 +12,16 @@ RE::BSEventNotifyControl MenuEventHandler::MenuEvent::ProcessEvent(const RE::Men
     if (event->opening) {
         return continueEvent;
     }
-    if (event->menuName != journal_menu)
+    if (event->menuName != journal_menu){
         return continueEvent;
-
+    }
     if (event->menuName == journal_menu) {
         if (!event->opening) {
             input_event->GetMappedKey();
+            // TrueHUD implementation
             settings->LoadMCMSettings();
             logger::debug("got mapped keys");
         }
     }
-
     return continueEvent;
 };

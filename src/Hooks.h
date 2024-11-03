@@ -14,12 +14,6 @@ namespace Hooks
     static REL::Relocation<std::uintptr_t>        armorRating2(REL::RelocationID(37605, 38558));
     inline static REL::Relocation<std::uintptr_t> launchArrow(REL::RelocationID(17693, 18102), REL::VariantOffset(0xE82, 0xe60, 0xE82));
 
-
-
-    // Valhalla Combat                               May be used later for a timed dodge cooldown mechanic
-    // inline static float*                          g_deltaTime         = (float*)RELOCATION_ID(523660, 410199).address(); // 2F6B948
-    // inline static float*                          g_deltaTimeRealTime = (float*)RELOCATION_ID(523661, 410200).address(); // 2F6B94C
-
     bool InstallHooks();
     bool InstallBashMultHook();
 
@@ -31,6 +25,7 @@ namespace Hooks
         static void ActorUpdate(RE::Character* a_this, float a_delta);
         static inline REL::Relocation<decltype(&ActorUpdate)> _ActorUpdate;
     };
+    //Fenix
     class CombatHit {
     public:
         static void Install();
@@ -39,6 +34,7 @@ namespace Hooks
         static float PitFighter(void* _weap, RE::ActorValueOwner* a, float DamageMult, char isbow);
         static inline REL::Relocation<decltype(&PitFighter)> _originalCall;
     };
+    // RE Discord Server po3/doodlez
     class BowHit {
     public:
         static void Install();
@@ -46,7 +42,7 @@ namespace Hooks
         static float PitFighterBow(float a1, float a2);
         static inline REL::Relocation<decltype(&PitFighterBow)> _originalCall;
     };
-
+    // po3: https://github.com/powerof3/MagicSneakAttacks/blob/275255b26492115557c7bfa3cb7c4a79e83f2f3d/src/Hooks.cpp#L29
     class AdjustActiveEffect
     {
     public:        
@@ -56,5 +52,4 @@ namespace Hooks
         static void AdjustSpells(RE::ActiveEffect* a_this, float a_power, bool a_onlyHostile);
         static inline REL::Relocation<decltype(&AdjustSpells)> func;
     };
-
 } // namespace Hooks

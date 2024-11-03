@@ -8,6 +8,19 @@
 // Originally intended to just implement some condition functions but iv been placing extensions/utility here as well
 namespace Conditions
 {
+    class APIuse
+    {
+
+    public: 
+        TRUEHUD_API::IVTrueHUD3* ersh_TrueHUD = nullptr;
+        static APIuse* GetSingleton()
+        {
+            static APIuse singleton;
+            return  std::addressof(singleton);
+        }
+
+    };
+
     inline static int GetRandomINT(int a_min, int a_max)
     {
         static std::random_device       rd;
@@ -24,7 +37,7 @@ namespace Conditions
         return distrib(gen);
     }
 
-    inline static float GetPointInRange(double radius, float start_point) 
+    inline static float GetPointInRange(float radius, float start_point) 
     {
         float r = radius * std::sqrt((float)GetRandomDouble(0.0f, 1.0f));
         auto theta = (float)GetRandomDouble(0.0f, 1.0f) * 2.0f * std::numbers::pi_v<float>;
@@ -77,14 +90,18 @@ namespace Conditions
 
         auto               activeEffects = a_actor->AsMagicTarget()->GetActiveEffectList();
         RE::EffectSetting* setting       = nullptr;
-        for (auto& effect : *activeEffects) {
-            setting = effect ? effect->GetBaseObject() : nullptr;
-            if (setting) {
-                if (setting == a_effect) {
-                    return true;
+        if (!activeEffects->empty()) {
+            for (RE::ActiveEffect* effect : *activeEffects) {
+                if (effect; !effect->flags.any(RE::ActiveEffect::Flag::kInactive)) {
+                    setting = effect ? effect->GetBaseObject() : nullptr;
+                    if (setting) {
+                        if (setting == a_effect) {
+                            return true;
+                        }
+                    }
                 }
             }
-        }
+        }        
         return false;
     }
 
@@ -94,11 +111,15 @@ namespace Conditions
 
         auto               activeEffects = player->AsMagicTarget()->GetActiveEffectList();
         RE::EffectSetting* setting       = nullptr;
-        for (auto& effect : *activeEffects) {
-            setting = effect ? effect->GetBaseObject() : nullptr;
-            if (setting) {
-                if (setting == a_effect) {
-                    return true;
+        if (!activeEffects->empty()) {
+            for (RE::ActiveEffect* effect : *activeEffects) {
+                if (effect; !effect->flags.any(RE::ActiveEffect::Flag::kInactive)) {
+                    setting = effect ? effect->GetBaseObject() : nullptr;
+                    if (setting) {
+                        if (setting == a_effect) {
+                            return true;
+                        }
+                    }
                 }
             }
         }
@@ -125,11 +146,6 @@ namespace Conditions
             }
         }
         return false;
-    }
-
-    inline static bool resetBool(bool a_bool) {
-        dlog("bool was set from {} to {}", a_bool ? "true" : "false", !a_bool ? "true" : "false");
-        return !a_bool;
     }
 
     // Credit: D7ry for getWieldingWeapon in ValhallaCombat
@@ -354,10 +370,8 @@ namespace Conditions
 
     }
 
-    inline static void ArrowRain(RE::Actor* a_shooterForLevel, RE::Actor* a_Source, RE::TESAmmo* a_arrow, RE::Actor* start_actor, RE::Actor* target, int range, float extra_height, RE::AlchemyItem* a_poison)
+    inline static void ArrowRain(RE::Actor* a_Source, RE::TESAmmo* a_arrow, RE::Actor* start_actor, RE::Actor* target, float range, float extra_height, RE::AlchemyItem* a_poison)
     {
-        
-
         RE::NiPoint3 StartPos;
         StartPos.x = start_actor->GetPositionX();
         StartPos.y = start_actor->GetPositionY();
@@ -406,71 +420,6 @@ namespace Conditions
         RE::Projectile::Launch(&handle, ldata);
             
         
-    }
-
-    inline void LaunchFireMeteores(RE::Actor* a_actor, RE::SpellItem* a_spell, RE::TESObjectREFR* a_target, float a_area)
-    {
-        SKSE::GetTaskInterface()->AddTask([a_actor, a_spell, a_target, a_area]() {
-
-            RE::NiPoint3 NodePosition;
-
-            NodePosition.x = a_target->GetPositionX();
-            NodePosition.y = a_target->GetPositionY();
-            NodePosition.z = a_target->GetPositionZ() + 600;
-
-            logger::debug("NodePosition: X = {}, Y = {}, Z = {}.", NodePosition.x, NodePosition.y, NodePosition.z);
-
-            RE::NiPoint3 DestinationPosition;
-
-            DestinationPosition.x = a_target->GetPositionX() + GetRandomINT(0, a_area);
-            DestinationPosition.y = a_target->GetPositionY() + GetRandomINT(0, a_area);
-            DestinationPosition.z = a_target->GetPositionZ();
-
-            logger::debug("DestinationPosition: X = {}, Y = {}, Z = {}.", DestinationPosition.x, DestinationPosition.y, DestinationPosition.z);
-
-            auto rot = rot_at(NodePosition, DestinationPosition);
-
-            auto eff = a_spell->GetCostliestEffectItem();
-
-            auto mgef = a_spell->GetAVEffect();
-
-            RE::Projectile::LaunchData ldata;
-
-            ldata.origin = NodePosition;
-            ldata.contactNormal = { 0.0f, 0.0f, 0.0f };
-            ldata.projectileBase = mgef->data.projectileBase;
-            ldata.shooter = a_actor;
-            ldata.combatController = a_actor->GetActorRuntimeData().combatController;
-            ldata.weaponSource = nullptr;
-            ldata.ammoSource = nullptr;
-            ldata.angleZ = rot.z;
-            ldata.angleX = rot.x;
-            ldata.unk50 = nullptr;
-            ldata.desiredTarget = nullptr;
-            ldata.unk60 = 0.0f;
-            ldata.unk64 = 0.0f;
-            ldata.parentCell = a_actor->GetParentCell();
-            ldata.spell = a_spell;
-            ldata.castingSource = RE::MagicSystem::CastingSource::kOther;
-            ldata.pad7C = 0;
-            ldata.enchantItem = nullptr;
-            ldata.poison = nullptr;
-            ldata.area = eff->GetArea();
-            ldata.power = 1.0f;
-            ldata.scale = 1.0f;
-            ldata.alwaysHit = false;
-            ldata.noDamageOutsideCombat = false;
-            ldata.autoAim = false;
-            ldata.chainShatter = false;
-            ldata.useOrigin = true;
-            ldata.deferInitialization = false;
-            ldata.forceConeOfFire = false;
-            RE::BSPointerHandle<RE::Projectile> handle;
-            RE::Projectile::Launch(&handle, ldata);
-
-
-            });
-            
     }
 
     inline static void CastSpellFromPointToPoint(RE::Actor* akSource, RE::SpellItem* akSpell, float StartPoint_X, float StartPoint_Y, float StartPoint_Z, float EndPoint_X,
@@ -559,26 +508,43 @@ namespace Conditions
         }
     }
 
-    class APIuse
-    {
-        
-    public: 
-        TRUEHUD_API::IVTrueHUD3* ersh_TrueHUD = nullptr;
-        static APIuse* GetSingleton()
-        {
-            static APIuse singleton;
-            return  std::addressof(singleton);
+    /*
+    
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor, 0xDA1DF3);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor, 0xDA1DF3);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor, 0xDA1DF3);
+    
+    */
+
+    inline void PlayerGreyoutAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {
+        if (!Settings::TrueHudAPI_Obtained) {
+            return;
         }
-        
-    };
+        auto ersh = APIuse::GetSingleton()->ersh_TrueHUD;
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor, Settings::uColorCodeStamFlash);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor, Settings::uColorCodeStamBar);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor, Settings::uColorCodePhantom);
+    }
+
+    inline void PlayerRevertAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {
+        if (!Settings::TrueHudAPI_Obtained) {
+            return;
+        }
+        auto ersh = APIuse::GetSingleton()->ersh_TrueHUD;
+        ersh->RevertBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor);
+        ersh->RevertBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor);
+        ersh->RevertBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor);
+    }
+
+
     inline void greyoutAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {
         if (!Settings::TrueHudAPI_Obtained) {
             return;
         }
         auto ersh = APIuse::GetSingleton()->ersh_TrueHUD;
-        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor, 0xd72a2a);
-        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor, 0x7d7e7d);
-        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor, 0xb30d10);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor, Settings::uColorCodeStamFlash);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor, Settings::uColorCodeStamBar);
+        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor, Settings::uColorCodePhantom);
     }
 
     inline void revertAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {

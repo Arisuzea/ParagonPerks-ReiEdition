@@ -54,11 +54,13 @@ void InitListener(SKSE::MessagingInterface::Message* a_msg)
         else {
             logger::info("Bash hook installed");
         }
+        
     }
     if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
         if (settings) {
             settings->LoadForms();
             settings->AdjustWeaponStaggerVals();
+            settings->LoadMCMSettings();
         }
         AnimationGraphEventHandler::Register();
         AnimationGraphEventHandler::RegisterAnimHook();
@@ -96,7 +98,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
         return false;
     }
 
-    logger::info("Valor Perks loaded.");
+    logger::info("...{} loaded.", plugin->GetName());
     spdlog::default_logger()->flush();
     return true;
 }

@@ -59,18 +59,18 @@ public:
                 dlog("Arrow Attack Actor Not Found!");
                 return continueEvent;
             }
-            auto weap = Conditions::getWieldingWeapon(aggressor);
-            if (weap->IsBow()) {
-                logger::debug("weapon is bow");
-                Settings* settings = Settings::GetSingleton();
-                /*if (!Conditions::ActorHasActiveEffect(aggressor, settings->ArrowRainCooldownEffect)) {
-                    LaunchArrowRain(aggressor, defender, 800.0f);
-                    dlog("start arrow rain");
-                }*/               
-            }
+            //auto weap = Conditions::getWieldingWeapon(aggressor);
+            //if (weap && !weap->IsHandToHandMelee() && weap->IsBow()) {
+            //    logger::debug("weapon is bow");
+            //    Settings* settings = Settings::GetSingleton();
+            //    /*if (!Conditions::ActorHasActiveEffect(aggressor, settings->ArrowRainCooldownEffect)) {
+            //        LaunchArrowRain(aggressor, defender, 800.0f);
+            //        dlog("start arrow rain");
+            //    }*/               
+            //}
             if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target && !a_event->projectile) {
                 logger::debug("entered block event");
-                auto attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
+                attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
                 if (!defender || !attacking_weap || !defender->GetActorRuntimeData().currentProcess || !defender->GetActorRuntimeData().currentProcess->high
                     || !attacking_weap->IsMelee() || !defender->Get3D())
                 {
@@ -87,7 +87,6 @@ public:
                     dlog("Attacker Attack Data Not Found!");
                     return continueEvent;
                 }
-                auto meleeweap = Conditions::getWieldingWeapon(aggressor);
                 auto leftHand  = defender->GetEquippedObject(true);
                 auto rightHand = defender->GetEquippedObject(false);
 
@@ -98,7 +97,6 @@ public:
                         PlaySparks(defender);
                     }
                     else {
-                        dlog("npc sparks with shield");
                         PlaySparks(defender);
                     }
                 }
@@ -110,7 +108,6 @@ public:
                         PlaySparks(defender);
                     }
                     else {
-                        dlog("npc sparks with weapon");
                         PlaySparks(defender);
                     }
                 }
@@ -162,7 +159,7 @@ public:
                     Conditions::ApplySpell(attacker, attacker, settings->ArrowRainCooldownSpell);
                     for (int i = 0; i < 75; i++) {
                         SKSE::GetTaskInterface()->AddTask([=] {
-                            Conditions::ArrowRain(attacker, attacker, attacker->GetCurrentAmmo(), target, target, a_area, 500, player->GetInfoRuntimeData().pendingPoison);
+                            Conditions::ArrowRain(attacker, attacker->GetCurrentAmmo(), target, target, a_area, 500.0f, player->GetInfoRuntimeData().pendingPoison);
                             });                   
                     }
                 }
@@ -170,7 +167,7 @@ public:
                     do_once = true;
                     for (int i = 0; i < 75; i++) {
                         SKSE::GetTaskInterface()->AddTask([=] {
-                            Conditions::ArrowRain(attacker, attacker, attacker->GetCurrentAmmo(), target, target, a_area, 500, nullptr);
+                            Conditions::ArrowRain(attacker, attacker->GetCurrentAmmo(), target, target, a_area, 500.0f, nullptr);
                             });                   
                     }
                 }
@@ -189,7 +186,7 @@ public:
             for (auto& actors : Conditions::GetNearbyActors(target, settings->surroundingActorsRange, false)) {
                 if (actors != aggressor) {
                     Conditions::ApplySpell(target, actors, settings->MAGParryStaggerSpell);
-                    dlog("applied spell to {}", actors->GetName());
+
                 }
             }
             Conditions::ApplySpell(target, aggressor, settings->MAGParryStaggerSpell);
@@ -205,7 +202,7 @@ public:
             for (auto& actors : Conditions::GetNearbyActors(target, settings->surroundingActorsRange, false)) {
                 if (actors != aggressor) {
                     Conditions::ApplySpell(target, actors, settings->MAGParryStaggerSpell);
-                    dlog("applied spell to {}", actors->GetName());
+
                 }
             }
             Conditions::ApplySpell(target, aggressor, settings->MAGParryStaggerSpell);
