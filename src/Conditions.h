@@ -498,6 +498,13 @@ namespace Conditions
         }
     }
 
+    inline static bool isInBlockAngle(RE::Actor* blocker, RE::TESObjectREFR* a_obj) 
+    {
+        auto angle = blocker->GetHeadingAngle(a_obj->GetPosition(), false);
+        return (angle <= Settings::blockAngleSetting && angle >= -Settings::blockAngleSetting);
+    }
+
+
     inline static void ApplySpell(RE::Actor* caster, RE::Actor* target, RE::SpellItem* spell)
     {
         if (IsPermanent(spell)) {
@@ -540,11 +547,12 @@ namespace Conditions
     inline void greyoutAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {
         if (!Settings::TrueHudAPI_Obtained) {
             return;
-        }
+        }        
         auto ersh = APIuse::GetSingleton()->ersh_TrueHUD;
         ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor, Settings::uColorCodeStamFlash);
         ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor, Settings::uColorCodeStamBar);
         ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor, Settings::uColorCodePhantom);
+        dlog("gray Out");
     }
 
     inline void revertAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {

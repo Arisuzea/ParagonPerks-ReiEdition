@@ -122,6 +122,8 @@ void Settings::GetIngameData() noexcept // hard coded FormIDs to keep the ini fi
     const int weapon_sparks= 0xAB;
     const int physic_sparks= 0xA9;
     const int normal_sparks= 0xAA;
+    const int magic_parry_perk = 0x58f69;
+    const int arrow_parry_perk = 0x58f68;
     //Not implemented (yet?)
  /*   const int multi_shot_perk = 0x0;
     const int multi_shot_cd_spell = 0x0;
@@ -144,14 +146,18 @@ void Settings::GetIngameData() noexcept // hard coded FormIDs to keep the ini fi
     //MultiShotCooldownEffect = dataHandler->LookupForm(multi_shot_cd_effect, FileName)->As<RE::EffectSetting>();
 
     // Globals:
-    StaminaCostGlobal    = dataHandler->LookupForm(stam_cost_global, FileName)->As<RE::TESGlobal>();
-    NPCStaminaCostGlobal = dataHandler->LookupForm(npc_stam_cost, FileName)->As<RE::TESGlobal>();
+    StaminaCostGlobal    = dataHandler->LookupForm(stam_cost_global, FileName)->As<RE::TESGlobal>();    
+    NPCStaminaCostGlobal = dataHandler->LookupForm(npc_stam_cost, FileName)->As<RE::TESGlobal>();  
     DualBlockKey         = dataHandler->LookupForm(dual_block_key, FileName)->As<RE::TESGlobal>();
+
     // Perks:
     BashStaminaPerk  = dataHandler->LookupForm(bashStamPerk, "Update.esm")->As<RE::BGSPerk>();
     BlockStaminaPerk = dataHandler->LookupForm(blockStamPerk, "Update.esm")->As<RE::BGSPerk>();
     PitFighterPerk = dataHandler->LookupForm(pit_fighter_perk, FileName)->As<RE::BGSPerk>();
     dummyPerkDodge = dataHandler->LookupForm(DodgePerk, FileName)->As<RE::BGSPerk>();
+    MagicParryPerk = dataHandler->LookupForm(magic_parry_perk, "Skyrim.esm")->As<RE::BGSPerk>();
+    ArrowParryPerk = dataHandler->LookupForm(arrow_parry_perk, "Skyrim.esm")->As<RE::BGSPerk>();
+
     // Effects:
     MAG_ParryWindowEffect = dataHandler->LookupForm(ParryWindowEffect, FileName)->As<RE::EffectSetting>();
     StaminaPenaltyEffect = dataHandler->LookupForm(stam_pen_effect, FileName)->As<RE::EffectSetting>();
@@ -168,20 +174,56 @@ void Settings::GetIngameData() noexcept // hard coded FormIDs to keep the ini fi
     BowStaminaSpell              = dataHandler->LookupForm(bow_stam_spel, FileName)->As<RE::SpellItem>();
     XbowStaminaSpell             = dataHandler->LookupForm(x_bow_stam_spel, FileName)->As<RE::SpellItem>();
     IsCastingSpell               = dataHandler->LookupForm(casting_spel, FileName)->As<RE::SpellItem>();
-    MAGParryControllerSpell      = dataHandler->LookupForm(parry_control_spel, FileName)->As<RE::SpellItem>();
+    MAGParryControllerSpell      = dataHandler->LookupForm(parry_control_spel, FileName)->As<RE::SpellItem>(); 
     MAGParryStaggerSpell         = dataHandler->LookupForm(parry_stagger_spel, FileName)->As<RE::SpellItem>();
     APOParryBuffSPell            = dataHandler->LookupForm(parry_buff_spel, FileName)->As<RE::SpellItem>();
     MAGCrossbowStaminaDrainSpell = dataHandler->LookupForm(crossbow_stam_drain, FileName)->As<RE::SpellItem>();
     DodgeRuneSpell = dataHandler->LookupForm(dodge_spell, FileName)->As<RE::SpellItem>();
+
     // Explosions:
     APOSparksShieldFlash = dataHandler->LookupForm(shield_sparks, FileName)->As<RE::BGSExplosion>();
     APOSparksFlash       = dataHandler->LookupForm(weapon_sparks, FileName)->As<RE::BGSExplosion>();
     APOSparksPhysics     = dataHandler->LookupForm(physic_sparks, FileName)->As<RE::BGSExplosion>();
     APOSparks            = dataHandler->LookupForm(normal_sparks, FileName)->As<RE::BGSExplosion>();
-    
+
     // test stuff
     fireBolt = dataHandler->LookupForm(0x2dd29, "Skyrim.esm")->As<RE::SpellItem>();
 
+    // form logging
+    if (debug_logging) {
+        LogForm("Stamina Cost Global", StaminaCostGlobal);
+        LogForm("NPCStaminaCostGlobal", NPCStaminaCostGlobal);
+        LogForm("DualBlockKey", DualBlockKey);
+        LogForm("BashStaminaPerk", BashStaminaPerk);
+        LogForm("BlockStaminaPerk", BlockStaminaPerk);
+        LogForm("PitFighterPerk", PitFighterPerk);
+        LogForm("dummyPerkDodge", dummyPerkDodge);
+        LogForm("MagicParryPerk", MagicParryPerk);
+        LogForm("ArrowParryPerk", ArrowParryPerk);
+        LogForm("MAG_ParryWindowEffect", MAG_ParryWindowEffect);
+        LogForm("StaminaPenaltyEffect", StaminaPenaltyEffect);
+        LogForm("StaminaPenEffectNPC", StaminaPenEffectNPC);
+        LogForm("IsBlockingSpell", IsBlockingSpell);
+        LogForm("PowerAttackStopSpell", PowerAttackStopSpell);
+        LogForm("jumpSpell", jumpSpell);
+        LogForm("IsAttackingSpell", IsAttackingSpell);
+        LogForm("IsSneakingSpell", IsSneakingSpell);
+        LogForm("IsSprintingSpell", IsSprintingSpell);
+        LogForm("MountSprintingSpell", MountSprintingSpell);
+        LogForm("BowStaminaSpell", BowStaminaSpell);
+        LogForm("XbowStaminaSpell", XbowStaminaSpell);
+        LogForm("IsCastingSpell", IsCastingSpell);
+        LogForm("MAGParryControllerSpell", MAGParryControllerSpell);
+        LogForm("MAGParryStaggerSpell", MAGParryStaggerSpell);
+        LogForm("APOParryBuffSPell", APOParryBuffSPell);
+        LogForm("MAGCrossbowStaminaDrainSpell", MAGCrossbowStaminaDrainSpell);
+        LogForm("DodgeRuneSpell", DodgeRuneSpell);
+        LogForm("APOSparksShieldFlash", APOSparksShieldFlash);
+        LogForm("APOSparksFlash", APOSparksFlash);
+        LogForm("APOSparksPhysics", APOSparksPhysics);
+        LogForm("APOSparks", APOSparks);
+    }
+    
     logger::debug("ingame forms loaded");
 }
 

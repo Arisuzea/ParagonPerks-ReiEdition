@@ -37,10 +37,13 @@ namespace Hooks
         if (!BashBlockStaminaPatch::InstallBlockMultHook()) {
             return false;
         }
-        ActorUpdateHook::InstallUpdateActor();
+        //ActorUpdateHook::InstallUpdateActor();
         CombatHit::Install(); // 
         BowHit::Install();
         AdjustActiveEffect::Install();
+        ValueEffectStartHook::Install();
+        ValueEffectFinishHook::Install();
+        
         return true;
     }
     bool InstallBashMultHook()
@@ -57,7 +60,7 @@ namespace Hooks
     void ActorUpdateHook::ActorUpdate(RE::Character* a_this, float a_delta)
     {
         _ActorUpdate(a_this, a_delta);
-        if (a_this->Is3DLoaded() && a_this->IsInCombat() && !a_this->IsDead()) {
+        /*if (a_this->Is3DLoaded() && a_this->IsInCombat() && !a_this->IsDead()) {
             Settings* settings = Settings::GetSingleton();
             if (Conditions::ActorHasActiveEffect(a_this, settings->StaminaPenEffectNPC) || Conditions::ActorHasActiveEffect(a_this, settings->StaminaPenaltyEffect)) {
                 Conditions::greyoutAvMeter(a_this, RE::ActorValue::kStamina);
@@ -65,7 +68,7 @@ namespace Hooks
             else {
                 Conditions::revertAvMeter(a_this, RE::ActorValue::kStamina);
             }
-        }
+        }*/
     }
     void CombatHit::Install()
     {
@@ -140,8 +143,10 @@ namespace Hooks
         const auto target = a_this->GetTargetActor();
         const auto effect = a_this->GetBaseObject();
         const auto spell = a_this->spell;
+        dlog("detected {} on {}", spell->GetName(), attacker.get()->GetName());
         const Settings* settings = Settings::GetSingleton();
         if (attacker && attacker->HasPerk(settings->PitFighterPerk) && target && spell && effect && effect->IsHostile()) {
+            dlog("{} adjusted for {}", spell->GetName(), attacker.get()->GetName());
             if (const auto projectile = effect->data.projectileBase; projectile) {
                 auto dam = a_this->magnitude;
                 std::int32_t enemyNum = Conditions::NumNearbyActors(attacker.get(), 500.0f, false);
@@ -168,5 +173,46 @@ namespace Hooks
         auto& trampoline = SKSE::GetTrampoline();
         REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(33763, 34547), REL::Relocate(0x4A3, 0x656, 0x427)  }; // MagicTarget::CheckAddEffect
         func = trampoline.write_call<5>(target.address(), &AdjustSpells);
+    }
+
+    void ValueEffectStartHook::Install()
+    {
+        func = REL::Relocation<uintptr_t>{ RE::PeakValueModifierEffect::VTABLE[0] }.write_vfunc(20, thunk);
+        logger::info("ValueEffectStartHook complete...");
+    }
+
+    void ValueEffectStartHook::thunk(RE::PeakValueModifierEffect* a_this)
+    {
+        dlog("new hook active");
+        func(a_this);
+        auto effect = a_this->effect;
+        float magnitude = effect->GetMagnitude();
+        if (a_this->GetBaseObject() == Settings::StaminaPenaltyEffect || a_this->GetBaseObject() == Settings::StaminaPenEffectNPC) {
+            RE::Actor* actor = skyrim_cast<RE::Actor*>(a_this->target);
+            if (actor) {
+                dlog("effect end hooked. effect is {} and target is {}", a_this->GetBaseObject()->GetName(), actor->GetName());
+                Conditions::greyoutAvMeter(actor, RE::ActorValue::kStamina);                    
+            }
+        }
+    }
+    void ValueEffectFinishHook::Install()
+    {
+        func = REL::Relocation<uintptr_t>{ RE::PeakValueModifierEffect::VTABLE[0] }.write_vfunc(21, thunk);
+        logger::info("ValueEffectFinishHook complete...");
+    }
+
+    void ValueEffectFinishHook::thunk(RE::PeakValueModifierEffect* a_this)
+    {
+        dlog("new end effect hook active");
+        func(a_this);
+        auto effect = a_this->effect;
+        float magnitude = effect->GetMagnitude();
+        if (a_this->GetBaseObject() == Settings::StaminaPenaltyEffect || a_this->GetBaseObject() == Settings::StaminaPenEffectNPC) {
+            RE::Actor* actor = skyrim_cast<RE::Actor*>(a_this->target);
+            if (actor) {
+                dlog("effect end hooked. effect is {} and target is {}", a_this->GetBaseObject()->GetName(), actor->GetName());
+                Conditions::revertAvMeter(actor, RE::ActorValue::kStamina);                    
+            }
+        }
     }
 } // namespace Hooks

@@ -13,6 +13,18 @@ class UpdateManager
 public:
     inline static int frameCount;
 
+    inline static void ChangeAVMeters(RE::PlayerCharacter* player, bool mgef_check) {
+        Settings* settings = Settings::GetSingleton();
+        if (mgef_check) {
+            Conditions::greyoutAvMeter(player, RE::ActorValue::kStamina);
+            dlog("greyout");            
+        }
+        else {
+            Conditions::revertAvMeter(player, RE::ActorValue::kStamina);
+            dlog("revert");
+        }
+    }
+
     inline static bool Install()
     {
         auto& trampoline = SKSE::GetTrampoline();
@@ -24,6 +36,9 @@ public:
     }
 
 private:
+    inline static bool once;
+    inline static bool done;
+
     inline static std::int32_t OnFrameUpdate(std::int64_t a1)
     {
         auto settings = Settings::GetSingleton();
@@ -33,14 +48,20 @@ private:
         }
         else {
             RE::PlayerCharacter* player       = Cache::GetPlayerSingleton();
-            auto                 playerCamera = RE::PlayerCamera::GetSingleton();
-
-            if (Conditions::PlayerHasActiveMagicEffect(settings->StaminaPenaltyEffect)) {
+            auto                 playerCamera = RE::PlayerCamera::GetSingleton();  
+            
+            /*if (Conditions::PlayerHasActiveMagicEffect(settings->StaminaPenaltyEffect ) && !once && !done) {
                 Conditions::greyoutAvMeter(player, RE::ActorValue::kStamina);
+                once = true;
+                done = true;
+                dlog("greyout");
             }
-            if (!Conditions::PlayerHasActiveMagicEffect(settings->StaminaPenaltyEffect)) {
+            if (!Conditions::PlayerHasActiveMagicEffect(settings->StaminaPenaltyEffect) && once && done ) {
                 Conditions::revertAvMeter(player, RE::ActorValue::kStamina);
-            }
+                dlog("revert");
+                once = false;
+                done = false;
+            }*/
             if (player->IsGodMode()) {
                 if (settings->IsCastingSpell)
                     player->RemoveSpell(settings->IsCastingSpell);

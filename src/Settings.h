@@ -39,6 +39,8 @@ public:
     RE::BGSPerk* ArrowRainPerk;
     RE::BGSPerk* MultiShotPerk;
     RE::BGSPerk* PitFighterPerk;
+    static inline RE::BGSPerk* MagicParryPerk;
+    static inline RE::BGSPerk* ArrowParryPerk;
     // Explosions (Sparks)
     RE::BGSExplosion* APOSparks;
     RE::BGSExplosion* APOSparksPhysics;
@@ -52,8 +54,8 @@ public:
     RE::EffectSetting* MAG_ParryWindowEffect;
     RE::EffectSetting* ArrowRainCooldownEffect;
     RE::EffectSetting* MultiShotCooldownEffect;
-    RE::EffectSetting* StaminaPenaltyEffect;
-    RE::EffectSetting* StaminaPenEffectNPC;
+    static inline RE::EffectSetting* StaminaPenaltyEffect;
+    static inline RE::EffectSetting* StaminaPenEffectNPC;
     // Conditions
     RE::TESCondition* IsPowerAttacking;
 
@@ -67,11 +69,12 @@ public:
     bool               armorScalingEnabled;
     bool               IsBlockingWeaponSpellCasted = false;
     bool               wasPowerAttacking           = false;
-    bool               debug_logging{};
+    inline static bool               debug_logging{};
+    static inline float fCombatHitConeAngle;
     // floats
     inline static float BonusXPPerLevel;
     inline static float BaseXP;
-    float               blockAngleSetting;
+    static inline float               blockAngleSetting;
     float               surroundingActorsRange;
     // int
     inline static uint32_t blockingKey[RE::INPUT_DEVICE::kFlatTotal] = { 0xFF, 0xFF, 0xFF };
@@ -90,7 +93,9 @@ public:
     static inline float dmgModifierMidEnemy = 1.3f;
     static inline float dmgModifierMinEnemy = 1.15f;
     static inline bool TrueHudAPI_Obtained;
-
+    static void LogForm(std::string name, RE::TESForm* a_form) {
+        dlog("found {} it is {}", name, a_form->GetName());
+    }
     // tests
     RE::BGSPerk* dummyPerkDodge;
 

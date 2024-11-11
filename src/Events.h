@@ -28,7 +28,7 @@ public:
     EventResult ProcessEvent(const RE::TESHitEvent* a_event, [[maybe_unused]] RE::BSTEventSource<RE::TESHitEvent>* a_eventSource) override
     {
         using HitFlag = RE::TESHitEvent::Flag;
-        if (!a_event || !a_event->target || !a_event->cause || a_event->projectile) {
+        if (!a_event || !a_event->target || !a_event->cause) {
             logger::debug("no target, no event, no cause");
             return continueEvent;
         }
@@ -44,94 +44,121 @@ public:
         }
         // Credits: https://github.com/colinswrath/handtohand/blob/main/src/Events.h for hand to hand event
 
+        auto applicationRuntime = GetDurationOfApplicationRunTime();
 
-        if (!a_event->flags.any(HitFlag::kBashAttack) && a_event->target) {
-            
-            auto attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
-            if (!defender || !defender->GetActorRuntimeData().currentProcess || !defender->GetActorRuntimeData().currentProcess->high
-                || !defender->Get3D())
-            {
-                dlog("arrow event, first continue");
-                return continueEvent;
-            }
+        bool skipEvent = ShouldSkipHitEvent(aggressor, defender, applicationRuntime);	//Filters out dupe events
 
-            if (!aggressor || !aggressor->GetActorRuntimeData().currentProcess || !aggressor->GetActorRuntimeData().currentProcess->high) {
-                dlog("Arrow Attack Actor Not Found!");
-                return continueEvent;
-            }
-            //auto weap = Conditions::getWieldingWeapon(aggressor);
-            //if (weap && !weap->IsHandToHandMelee() && weap->IsBow()) {
-            //    logger::debug("weapon is bow");
-            //    Settings* settings = Settings::GetSingleton();
-            //    /*if (!Conditions::ActorHasActiveEffect(aggressor, settings->ArrowRainCooldownEffect)) {
-            //        LaunchArrowRain(aggressor, defender, 800.0f);
-            //        dlog("start arrow rain");
-            //    }*/               
-            //}
-            if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target && !a_event->projectile) {
-                logger::debug("entered block event");
-                attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
-                if (!defender || !attacking_weap || !defender->GetActorRuntimeData().currentProcess || !defender->GetActorRuntimeData().currentProcess->high
-                    || !attacking_weap->IsMelee() || !defender->Get3D())
+        if (!skipEvent) {
+
+            if (!a_event->flags.any(HitFlag::kBashAttack) && a_event->target) {
+
+                auto attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
+                if (!defender || !defender->GetActorRuntimeData().currentProcess || !defender->GetActorRuntimeData().currentProcess->high
+                    || !defender->Get3D())
                 {
-                    dlog("block event, first continue");
+                    dlog("arrow event, first continue");
                     return continueEvent;
                 }
 
                 if (!aggressor || !aggressor->GetActorRuntimeData().currentProcess || !aggressor->GetActorRuntimeData().currentProcess->high) {
-                    dlog("Attack Actor Not Found!");
+                    dlog("Arrow Attack Actor Not Found!");
                     return continueEvent;
                 }
-                auto data_aggressor = aggressor->GetActorRuntimeData().currentProcess->high->attackData;
-                if (!data_aggressor) {
-                    dlog("Attacker Attack Data Not Found!");
+                //auto weap = Conditions::getWieldingWeapon(aggressor);
+                //if (weap && !weap->IsHandToHandMelee() && weap->IsBow()) {
+                //    logger::debug("weapon is bow");
+                //    Settings* settings = Settings::GetSingleton();
+                //    /*if (!Conditions::ActorHasActiveEffect(aggressor, settings->ArrowRainCooldownEffect)) {
+                //        LaunchArrowRain(aggressor, defender, 800.0f);
+                //        dlog("start arrow rain");
+                //    }*/               
+                //}
+                
+                if (Settings::debug_logging) {
+                    if (a_event->source) {
+                        auto source = RE::TESForm::LookupByID(a_event->source);
+                        auto type = source->GetFormType();
+                        auto name = source->GetName();
+                        dlog("event source is {} with a type of {}", name, type);
+                    }
+                }   
+                if (a_event->projectile) {
+                    auto lHa = defender->GetEquippedObject(true);
+                    if (lHa && lHa->IsArmor()) {
+                        dlog("hit ward");
+                        if (defender->IsPlayerRef() && defender->HasPerk(Settings::MagicParryPerk)) {
+                            if (Conditions::isInBlockAngle(defender, aggressor)) {
+                                ProcessHitEventForParryShield(defender, aggressor, false);
+                            }                            
+                        }
+                    }
+                }
+                if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target) {
+                    logger::debug("entered block event");
+                    attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
+                    if (!defender || !attacking_weap || !defender->GetActorRuntimeData().currentProcess || !defender->GetActorRuntimeData().currentProcess->high
+                        || !defender->Get3D())
+                    {
+                        dlog("block event, first continue");
+                        return continueEvent;
+                    }                    
+
+                    if (!aggressor || !aggressor->GetActorRuntimeData().currentProcess || !aggressor->GetActorRuntimeData().currentProcess->high) {
+                        dlog("Attack Actor Not Found!");
+                        return continueEvent;
+                    }
+                    auto data_aggressor = aggressor->GetActorRuntimeData().currentProcess->high->attackData;
+                    if (!data_aggressor) {
+                        dlog("Attacker Attack Data Not Found!");
+                        return continueEvent;
+                    }                    
+
+                    auto leftHand = defender->GetEquippedObject(true);
+                    auto rightHand = defender->GetEquippedObject(false);
+
+                    if (leftHand && leftHand->IsArmor()) {                        
+                        dlog("left hand is shield");
+                        if (defender->IsPlayerRef()) {
+                            ProcessHitEventForParryShield(defender, aggressor, true);
+                            PlaySparks(defender);
+                        }
+                        else {
+                            PlaySparks(defender);
+                        }
+                    }
+                    else if (rightHand && rightHand->IsWeapon()) {
+                        dlog("left hand is empty");
+                        if (defender->IsPlayerRef()) {
+                            dlog("blocker is player");
+                            ProcessHitEventForParry(defender, aggressor);
+                            PlaySparks(defender);
+                        }
+                        else {
+                            PlaySparks(defender);
+                        }
+                    }
+                }
+
+                if (!a_event || !a_event->cause || !a_event->cause->IsPlayerRef() || a_event->target->IsNot(RE::FormType::ActorCharacter) || !a_event->source || a_event->projectile) {
                     return continueEvent;
                 }
-                auto leftHand  = defender->GetEquippedObject(true);
-                auto rightHand = defender->GetEquippedObject(false);
+                auto defenderProcess = defender->GetActorRuntimeData().currentProcess;
+                auto attackingWeapon = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
 
-                if (leftHand && leftHand->IsArmor()) {
-                    dlog("left hand is shield");
-                    if (defender->IsPlayerRef()) {
-                        ProcessHitEventForParryShield(defender, aggressor);
-                        PlaySparks(defender);
-                    }
-                    else {
-                        PlaySparks(defender);
-                    }
+                if (!defender || !attackingWeapon || !defenderProcess || !defenderProcess->high || !attackingWeapon->IsMelee() || !defender->Get3D()) {
+                    return continueEvent;
                 }
-                else if (rightHand && rightHand->IsWeapon()) {
-                    dlog("left hand is empty");
-                    if (defender->IsPlayerRef()) {
-                        dlog("blocker is player");
-                        ProcessHitEventForParry(defender, aggressor);
-                        PlaySparks(defender);
-                    }
-                    else {
-                        PlaySparks(defender);
-                    }
+
+                auto player = a_event->cause->As<RE::Actor>();
+                auto playerAttkData = player->GetActorRuntimeData().currentProcess->high->attackData;
+
+                if (!playerAttkData) {
+                    return continueEvent;
+                };
+                if ((defender->AsActorState()->GetLifeState() != RE::ACTOR_LIFE_STATE::kDead) && !IsBeastRace() && attackingWeapon->IsHandToHandMelee()) {
+                    dlog("H2H start to apply hand to hand xp");
+                    ApplyHandToHandXP();
                 }
-            }
-
-            if (!a_event || !a_event->cause || !a_event->cause->IsPlayerRef() || a_event->target->IsNot(RE::FormType::ActorCharacter) || !a_event->source || a_event->projectile) {
-                return continueEvent;
-            }
-            auto defenderProcess = defender->GetActorRuntimeData().currentProcess;
-            auto attackingWeapon = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
-
-            if (!defender || !attackingWeapon || !defenderProcess || !defenderProcess->high || !attackingWeapon->IsMelee() || !defender->Get3D()) {
-                return continueEvent;
-            }
-
-            auto player         = a_event->cause->As<RE::Actor>();
-            auto playerAttkData = player->GetActorRuntimeData().currentProcess->high->attackData;
-
-            if (!playerAttkData) {
-                return continueEvent;
-            };
-            if ((defender->AsActorState()->GetLifeState() != RE::ACTOR_LIFE_STATE::kDead) && !IsBeastRace() && attackingWeapon->IsHandToHandMelee()) {
-                dlog("H2H start to apply hand to hand xp");
-                ApplyHandToHandXP();
             }
         }
         // Block event. Sparks and parries
@@ -195,17 +222,20 @@ public:
         }
     }
 
-    void ProcessHitEventForParryShield(RE::Actor* target, RE::Actor* aggressor)
+    void ProcessHitEventForParryShield(RE::Actor* target, RE::Actor* aggressor, bool should_stagger)
     {
         auto settings = Settings::GetSingleton();
         if (Conditions::PlayerHasActiveMagicEffect(settings->MAG_ParryWindowEffect)) {
             for (auto& actors : Conditions::GetNearbyActors(target, settings->surroundingActorsRange, false)) {
                 if (actors != aggressor) {
-                    Conditions::ApplySpell(target, actors, settings->MAGParryStaggerSpell);
-
+                    if (should_stagger) {
+                        Conditions::ApplySpell(target, actors, settings->MAGParryStaggerSpell);
+                    }
                 }
             }
-            Conditions::ApplySpell(target, aggressor, settings->MAGParryStaggerSpell);
+            if (should_stagger) {
+                Conditions::ApplySpell(target, aggressor, settings->MAGParryStaggerSpell);
+            }            
             Conditions::ApplySpell(aggressor, target, settings->APOParryBuffSPell);
             target->PlaceObjectAtMe(settings->APOSparksShieldFlash, false);
         }

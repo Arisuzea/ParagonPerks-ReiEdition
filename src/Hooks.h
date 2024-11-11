@@ -22,6 +22,8 @@ namespace Hooks
     public: 
         static void InstallUpdateActor();
     private:
+        static bool done;
+        static bool once;
         static void ActorUpdate(RE::Character* a_this, float a_delta);
         static inline REL::Relocation<decltype(&ActorUpdate)> _ActorUpdate;
     };
@@ -52,4 +54,23 @@ namespace Hooks
         static void AdjustSpells(RE::ActiveEffect* a_this, float a_power, bool a_onlyHostile);
         static inline REL::Relocation<decltype(&AdjustSpells)> func;
     };
+
+    //VTABLE
+    struct ValueEffectStartHook
+    {
+        static void Install();
+        static void thunk(RE::PeakValueModifierEffect* a_this);
+        static inline REL::Relocation<decltype(&thunk)> func;
+    };
+
+    //VTABLE
+    struct ValueEffectFinishHook
+    {
+        static void Install();
+        static void thunk(RE::PeakValueModifierEffect* a_this); 
+        static inline REL::Relocation<decltype(thunk)> func;
+    };
+
+
+
 } // namespace Hooks
