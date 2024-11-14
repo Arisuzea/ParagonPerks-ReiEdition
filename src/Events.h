@@ -3,6 +3,7 @@
 #include <Hooks.h>
 #include <InputHandler.h>
 #include <RecentHitEventData.h>
+#include <TimedBlockHandler.h>
 
 using EventResult = RE::BSEventNotifyControl;
 
@@ -27,6 +28,7 @@ public:
 
     EventResult ProcessEvent(const RE::TESHitEvent* a_event, [[maybe_unused]] RE::BSTEventSource<RE::TESHitEvent>* a_eventSource) override
     {
+        auto tb = TimedBlockHandler::BlockHandler::GetSingleton();
         using HitFlag = RE::TESHitEvent::Flag;
         if (!a_event || !a_event->target || !a_event->cause) {
             logger::debug("no target, no event, no cause");
@@ -82,17 +84,22 @@ public:
                         dlog("event source is {} with a type of {}", name, type);
                     }
                 }   
-                if (a_event->projectile) {
+                /*if (a_event->projectile) {
                     auto lHa = defender->GetEquippedObject(true);
                     if (lHa && lHa->IsArmor()) {
                         dlog("hit ward");
                         if (defender->IsPlayerRef() && defender->HasPerk(Settings::MagicParryPerk)) {
                             if (Conditions::isInBlockAngle(defender, aggressor)) {
-                                ProcessHitEventForParryShield(defender, aggressor, false);
+                                tb->ProcessHitEventForParryShield(defender, aggressor, false);
+                                auto proj = RE::TESForm::LookupByID(a_event->projectile)->As<RE::Projectile>();
+                                if (proj) {
+                                    dlog("projectile found");
+                                    tb->BlockProjectile(defender, proj);  
+                                }                                                              
                             }                            
                         }
                     }
-                }
+                }*/
                 if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target) {
                     logger::debug("entered block event");
                     attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
@@ -119,22 +126,22 @@ public:
                     if (leftHand && leftHand->IsArmor()) {                        
                         dlog("left hand is shield");
                         if (defender->IsPlayerRef()) {
-                            ProcessHitEventForParryShield(defender, aggressor, true);
-                            PlaySparks(defender);
+                            tb->ProcessHitEventForParryShield(defender, aggressor, true);
+                            tb->PlaySparks(defender);
                         }
                         else {
-                            PlaySparks(defender);
+                            tb->PlaySparks(defender);
                         }
                     }
                     else if (rightHand && rightHand->IsWeapon()) {
                         dlog("left hand is empty");
                         if (defender->IsPlayerRef()) {
                             dlog("blocker is player");
-                            ProcessHitEventForParry(defender, aggressor);
-                            PlaySparks(defender);
+                            tb->ProcessHitEventForParry(defender, aggressor);
+                            tb->PlaySparks(defender);
                         }
                         else {
-                            PlaySparks(defender);
+                            tb->PlaySparks(defender);
                         }
                     }
                 }
@@ -203,50 +210,7 @@ public:
         }
     }
 
-    void ProcessHitEventForParry(RE::Actor* target, RE::Actor* aggressor)
-    {
-        dlog("processHitEvent For Parry started");
-        auto settings = Settings::GetSingleton();
-        if (Conditions::PlayerHasActiveMagicEffect(settings->MAG_ParryWindowEffect)) {
-            dlog("condition is true");
-            dlog("range is {}", settings->surroundingActorsRange);
-            for (auto& actors : Conditions::GetNearbyActors(target, settings->surroundingActorsRange, false)) {
-                if (actors != aggressor) {
-                    Conditions::ApplySpell(target, actors, settings->MAGParryStaggerSpell);
 
-                }
-            }
-            Conditions::ApplySpell(target, aggressor, settings->MAGParryStaggerSpell);
-            Conditions::ApplySpell(aggressor, target, settings->APOParryBuffSPell);
-            target->PlaceObjectAtMe(settings->APOSparksFlash, false);
-        }
-    }
-
-    void ProcessHitEventForParryShield(RE::Actor* target, RE::Actor* aggressor, bool should_stagger)
-    {
-        auto settings = Settings::GetSingleton();
-        if (Conditions::PlayerHasActiveMagicEffect(settings->MAG_ParryWindowEffect)) {
-            for (auto& actors : Conditions::GetNearbyActors(target, settings->surroundingActorsRange, false)) {
-                if (actors != aggressor) {
-                    if (should_stagger) {
-                        Conditions::ApplySpell(target, actors, settings->MAGParryStaggerSpell);
-                    }
-                }
-            }
-            if (should_stagger) {
-                Conditions::ApplySpell(target, aggressor, settings->MAGParryStaggerSpell);
-            }            
-            Conditions::ApplySpell(aggressor, target, settings->APOParryBuffSPell);
-            target->PlaceObjectAtMe(settings->APOSparksShieldFlash, false);
-        }
-    }
-
-    void PlaySparks(RE::Actor* defender)
-    {
-        const Settings* settings = Settings::GetSingleton();
-        defender->PlaceObjectAtMe(settings->APOSparks, false);
-        defender->PlaceObjectAtMe(settings->APOSparksPhysics, false);
-    }
 
     void ApplyHandToHandXP()
     {

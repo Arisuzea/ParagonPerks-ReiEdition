@@ -1,4 +1,5 @@
 #pragma once
+#include "TimedBlockHandler.h"
 
 namespace Hooks
 {
@@ -70,6 +71,21 @@ namespace Hooks
         static void thunk(RE::PeakValueModifierEffect* a_this); 
         static inline REL::Relocation<decltype(thunk)> func;
     };
+    typedef void(_fastcall* _destroyProjectile)(RE::Projectile* a_projectile);
+    inline static REL::Relocation<_destroyProjectile> destroyProjectile{ RELOCATION_ID(42930, 44110) };
+    class Hook_OnProjectileCollision
+    {
+    public:
+        static void Install();
+
+    private:
+        static void OnArrowCollision(RE::Projectile* a_this, RE::hkpAllCdPointCollector* a_AllCdPointCollector);
+        static void OnMissileCollision(RE::Projectile* a_this, RE::hkpAllCdPointCollector* a_AllCdPointCollector);
+        static inline REL::Relocation<decltype(OnArrowCollision)> _arrowCollission;
+        static inline REL::Relocation<decltype(OnMissileCollision)> _missileCollission;
+    };
+
+    inline bool shouldIgnoreHit(RE::Projectile* a_projectile, RE::hkpAllCdPointCollector* a_AllCdPointCollector);
 
 
 

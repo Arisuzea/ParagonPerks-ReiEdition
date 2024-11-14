@@ -43,12 +43,31 @@ namespace Hooks
         AdjustActiveEffect::Install();
         ValueEffectStartHook::Install();
         ValueEffectFinishHook::Install();
+        Hook_OnProjectileCollision::Install();
         
         return true;
     }
     bool InstallBashMultHook()
     {
         return BashBlockStaminaPatch::InstallBashMultHook();
+    }
+    bool shouldIgnoreHit(RE::Projectile* a_projectile, RE::hkpAllCdPointCollector* a_AllCdPointCollector)
+    {
+        if (a_AllCdPointCollector) {
+            for (auto& hit : a_AllCdPointCollector->hits) {
+                auto refrA = RE::TESHavokUtilities::FindCollidableRef(*hit.rootCollidableA);
+                auto refrB = RE::TESHavokUtilities::FindCollidableRef(*hit.rootCollidableB);
+                if (refrA && refrA->formType == RE::FormType::ActorCharacter) {
+                    dlog("ref a true");
+                    return TimedBlockHandler::BlockHandler::GetSingleton()->processProjectileBlock(refrA->As<RE::Actor>(), a_projectile, const_cast<RE::hkpCollidable*>(hit.rootCollidableB));
+                }                
+                if (refrB && refrB->formType == RE::FormType::ActorCharacter) {
+                    dlog(" ref b true");
+                    return TimedBlockHandler::BlockHandler::GetSingleton()->processProjectileBlock(refrB->As<RE::Actor>(), a_projectile, const_cast<RE::hkpCollidable*>(hit.rootCollidableA));
+                }
+            }
+        }
+        return false;
     }
     void ActorUpdateHook::InstallUpdateActor()
     {
@@ -214,5 +233,31 @@ namespace Hooks
                 Conditions::revertAvMeter(actor, RE::ActorValue::kStamina);                    
             }
         }
+    }
+    void Hook_OnProjectileCollision::Install()
+    {
+        REL::Relocation<std::uintptr_t> arrowProjectileVtbl{ RE::VTABLE_ArrowProjectile[0] };
+        REL::Relocation<std::uintptr_t> missileProjectileVtbl{ RE::VTABLE_MissileProjectile[0] };
+
+        _arrowCollission = arrowProjectileVtbl.write_vfunc(0xBE, OnArrowCollision);
+        _missileCollission = missileProjectileVtbl.write_vfunc(0xBE, OnMissileCollision);
+        logger::info("hook:OnProjectileCollision");
+    };
+    void Hook_OnProjectileCollision::OnArrowCollision(RE::Projectile* a_this, RE::hkpAllCdPointCollector* a_AllCdPointCollector)
+    {
+        if (shouldIgnoreHit(a_this, a_AllCdPointCollector)) {
+            dlog("arrow collision ignored");
+            return;
+        };
+        dlog("arrow collision happened");
+        _arrowCollission(a_this, a_AllCdPointCollector);
+    }
+    void Hook_OnProjectileCollision::OnMissileCollision(RE::Projectile* a_this, RE::hkpAllCdPointCollector* a_AllCdPointCollector)
+    {
+        if (shouldIgnoreHit(a_this, a_AllCdPointCollector)) {
+            dlog("missile collision ignored");
+            return;
+        };
+        _missileCollission(a_this, a_AllCdPointCollector);
     }
 } // namespace Hooks

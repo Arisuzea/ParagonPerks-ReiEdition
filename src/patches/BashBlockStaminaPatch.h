@@ -16,8 +16,8 @@ namespace BashBlockStaminaPatch
         if (a_hitData->target) {
             auto actorPtr = a_hitData->target.get();
             if (actorPtr.get()->IsPlayerRef()) {
-                auto perk = Settings::GetSingleton()->BlockStaminaPerk;
-                if (perk && actorPtr->HasPerk(Settings::GetSingleton()->BlockStaminaPerk)) {
+                auto perk = Settings::BlockStaminaPerk;
+                if (perk && actorPtr->HasPerk(Settings::BlockStaminaPerk)) {
                     perkMult = 0.5f;
                 }
             }

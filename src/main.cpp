@@ -86,6 +86,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 
     SKSE::AllocTrampoline(320);
     Cache::CacheAddLibAddresses();
+
     Settings::GetSingleton()->LoadSettings();
     logger::debug("loaded settings with debug enabled");
     if (!Hooks::InstallHooks()) {

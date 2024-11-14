@@ -515,13 +515,23 @@ namespace Conditions
         }
     }
 
-    /*
-    
-        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::FlashColor, 0xDA1DF3);
-        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor, 0xDA1DF3);
-        ersh->OverrideBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor, 0xDA1DF3);
-    
-    */
+    inline static bool tryDamageAV(RE::Actor* actor, RE::ActorValue av, float damage_val) {
+        if (actor->AsActorValueOwner()->GetActorValue(av) > damage_val + 1) {
+            actor->AsActorValueOwner()->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, -damage_val);
+            return true;
+        }
+        return false;
+    }
+
+    inline static float projectileBlockCost(RE::Actor* actor, float a_cost) {
+        float new_cost = a_cost;
+        if (actor->HasPerk(Settings::BlockStaminaPerk)) {
+            return new_cost / 2;
+        }
+        else 
+            return new_cost;
+    }
+
 
     inline void PlayerGreyoutAvMeter(RE::Actor* a_actor, RE::ActorValue actorValue) {
         if (!Settings::TrueHudAPI_Obtained) {
@@ -564,6 +574,8 @@ namespace Conditions
         ersh->RevertBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::BarColor);
         ersh->RevertBarColor(a_actor->GetHandle(), actorValue, TRUEHUD_API::BarColorType::PhantomColor);
     }
+
+    
     
 
 }; // namespace Conditions

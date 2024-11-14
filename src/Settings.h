@@ -35,7 +35,7 @@ public:
     RE::SpellItem* DodgeRuneSpell;
     // Perks
     RE::BGSPerk* BashStaminaPerk;
-    RE::BGSPerk* BlockStaminaPerk;
+    static inline RE::BGSPerk* BlockStaminaPerk;
     RE::BGSPerk* ArrowRainPerk;
     RE::BGSPerk* MultiShotPerk;
     RE::BGSPerk* PitFighterPerk;
@@ -51,9 +51,9 @@ public:
     RE::TESGlobal* NPCStaminaCostGlobal;
     RE::TESGlobal* DualBlockKey;
     // Effects
-    RE::EffectSetting* MAG_ParryWindowEffect;
-    RE::EffectSetting* ArrowRainCooldownEffect;
-    RE::EffectSetting* MultiShotCooldownEffect;
+    static inline RE::EffectSetting* MAG_ParryWindowEffect;
+    static inline RE::EffectSetting* ArrowRainCooldownEffect;
+    static inline RE::EffectSetting* MultiShotCooldownEffect;
     static inline RE::EffectSetting* StaminaPenaltyEffect;
     static inline RE::EffectSetting* StaminaPenEffectNPC;
     // Conditions
