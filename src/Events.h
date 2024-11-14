@@ -65,17 +65,7 @@ public:
                 if (!aggressor || !aggressor->GetActorRuntimeData().currentProcess || !aggressor->GetActorRuntimeData().currentProcess->high) {
                     dlog("Arrow Attack Actor Not Found!");
                     return continueEvent;
-                }
-                //auto weap = Conditions::getWieldingWeapon(aggressor);
-                //if (weap && !weap->IsHandToHandMelee() && weap->IsBow()) {
-                //    logger::debug("weapon is bow");
-                //    Settings* settings = Settings::GetSingleton();
-                //    /*if (!Conditions::ActorHasActiveEffect(aggressor, settings->ArrowRainCooldownEffect)) {
-                //        LaunchArrowRain(aggressor, defender, 800.0f);
-                //        dlog("start arrow rain");
-                //    }*/               
-                //}
-                
+                }                
                 if (Settings::debug_logging) {
                     if (a_event->source) {
                         auto source = RE::TESForm::LookupByID(a_event->source);
@@ -83,23 +73,7 @@ public:
                         auto name = source->GetName();
                         dlog("event source is {} with a type of {}", name, type);
                     }
-                }   
-                /*if (a_event->projectile) {
-                    auto lHa = defender->GetEquippedObject(true);
-                    if (lHa && lHa->IsArmor()) {
-                        dlog("hit ward");
-                        if (defender->IsPlayerRef() && defender->HasPerk(Settings::MagicParryPerk)) {
-                            if (Conditions::isInBlockAngle(defender, aggressor)) {
-                                tb->ProcessHitEventForParryShield(defender, aggressor, false);
-                                auto proj = RE::TESForm::LookupByID(a_event->projectile)->As<RE::Projectile>();
-                                if (proj) {
-                                    dlog("projectile found");
-                                    tb->BlockProjectile(defender, proj);  
-                                }                                                              
-                            }                            
-                        }
-                    }
-                }*/
+                }                
                 if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target) {
                     logger::debug("entered block event");
                     attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
