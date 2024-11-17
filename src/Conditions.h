@@ -354,18 +354,7 @@ namespace Conditions
             launchData.desiredTarget = a_target;
             launchData.poison = a_poison;
             launchData.enchantItem = a_weapon->formEnchanting;
-            launchData.power = 1.0f;
-            launchData.scale = 1.0f;
-            launchData.alwaysHit = true;
-            launchData.castingSource = RE::MagicSystem::CastingSource::kRightHand;
             auto projHandle = RE::Projectile::Launch(&handle, launchData);
-            auto proj = projHandle->get().get();
-            proj->GetProjectileRuntimeData().livingTime = 0.000001f;
-            auto& vel = proj->GetProjectileRuntimeData().linearVelocity;
-            auto linearDir = vel;
-            linearDir.Unitize();
-            vel = linearDir * 2000;
-            //auto arr = Hooks::LaunchArrowHook::LaunchArrow(a_ammo->GetRuntimeData().data.projectile->As<RE::ArrowProjectile>(), &launchData);
             });
 
     }

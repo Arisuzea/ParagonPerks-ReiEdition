@@ -74,11 +74,11 @@ public:
                         dlog("event source is {} with a type of {}", name, type);
                     }
                 }                
-                if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target) {
+                if (a_event->flags.any(HitFlag::kHitBlocked) && a_event->target && !a_event->projectile) {
                     logger::debug("entered block event");
                     attacking_weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->source);
                     if (!defender || !attacking_weap || !defender->GetActorRuntimeData().currentProcess || !defender->GetActorRuntimeData().currentProcess->high
-                        || !defender->Get3D())
+                        || !defender->Get3D() && attacking_weap->IsMelee())
                     {
                         dlog("block event, first continue");
                         return continueEvent;

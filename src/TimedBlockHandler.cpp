@@ -81,7 +81,7 @@ namespace TimedBlockHandler {
 				return false;
 			}
 			auto shooter = a_projectile->GetProjectileRuntimeData().shooter.get().get();
-			if (isInBlockAngle(a_blocker, a_projectile) && a_blocker->IsBlocking()) {
+			if ((isInBlockAngle(a_blocker, a_projectile) || isInBlockAngle(a_blocker, shooter) && a_blocker->IsBlocking())) {
 				dlog("condition for arrow parry true");
 				// evaluate cost
 				float cost{10.0f};
@@ -100,7 +100,7 @@ namespace TimedBlockHandler {
 						return tryBlockProjectile(a_blocker, a_projectile, cost);
 					}
 				}
-				return tryBlockProjectile(a_blocker, a_projectile, cost);
+				return false;
 			}
 			return false;
 		}

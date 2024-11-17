@@ -40,20 +40,24 @@ inline void AnimationGraphEventHandler::ProcessEvent(RE::BSTEventSink<RE::BSAnim
         return;
     }
     // DOES NOT WORK YET
-    /*if (!a_event->tag.empty() && a_event->holder && a_event->holder->As<RE::Actor>())
-    {
-        if (std::strcmp(a_event->tag.c_str(), BowShoot) == 0) {
-            logger::debug("Bow Shoot event");
-            RE::Actor* shooter = const_cast<RE::TESObjectREFR*>(a_event->holder)->As<RE::Actor>();
-            if (shooter->HasPerk(settings->dummyPerkDodge)) {
-                if (auto targ = shooter->GetActorRuntimeData().currentCombatTarget.get().get(); targ) {
-                    dlog("target is {}", targ->GetDisplayFullName());
-                }
-                //arrows don't get the full draw speed so they basically just fall
-                Conditions::LaunchExtraArrow(shooter, shooter->GetCurrentAmmo(), Conditions::getWieldingWeapon(shooter), "", -1, shooter->GetActorRuntimeData().currentCombatTarget.get().get(), nullptr);
-            }            
-        }
-    }*/
+    // firing arrows would work with anything but a bow, no idea why.
+    //if (!a_event->tag.empty() && a_event->holder && a_event->holder->As<RE::Actor>())
+    //{
+    //    if (std::strcmp(a_event->tag.c_str(), BowShoot) == 0) {
+    //        logger::debug("Bow Shoot event");
+    //        RE::Actor* shooter = const_cast<RE::TESObjectREFR*>(a_event->holder)->As<RE::Actor>();
+    //        if (shooter->HasPerk(settings->dummyPerkDodge)) {
+    //            if (auto targ = shooter->GetActorRuntimeData().currentCombatTarget.get().get(); targ) {
+    //                dlog("target is {}", targ->GetDisplayFullName());
+    //            }
+    //            //arrows don't get the full draw speed so they basically just fall
+    //            for (auto i = 0; i < 2; ++i) {
+    //                Conditions::LaunchExtraArrow(shooter, shooter->GetCurrentAmmo(), Conditions::getWieldingWeapon(shooter), "", -1, shooter->GetActorRuntimeData().currentCombatTarget.get().get(), nullptr);
+    //            }
+    //            
+    //        }            
+    //    }
+    //}
 
     if (!a_event->tag.empty() && a_event->holder && a_event->holder->As<RE::Actor>()) {
 
