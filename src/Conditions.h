@@ -21,6 +21,13 @@ namespace Conditions
 
     };
 
+    inline static bool IsSprinting(RE::Actor* actor) {
+        if (actor) {
+            return actor->AsActorState()->IsSprinting();
+        }
+        return false;
+    }
+
     inline static int GetRandomINT(int a_min, int a_max)
     {
         static std::random_device       rd;

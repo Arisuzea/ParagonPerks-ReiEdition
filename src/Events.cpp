@@ -108,12 +108,13 @@ void AnimationGraphEventHandler::ProcessEvent(RE::BSTEventSink<RE::BSAnimationGr
                 StaminaCost(actor, stam_cost);
             }
 
-            // Restore on light attacks and none for power attacks
-            if (actor == player && !Conditions::IsPowerAttacking(actor)) {
+            // Restore on light attacks and none for power or sprint attacks
+            if (actor == player && !Conditions::IsPowerAttacking(actor) && !Conditions::IsSprinting(actor)) {
                 double staminaRestore = stam_cost * 2; // Restore 2x of the stamina cost
                 RestoreStamina(actor, staminaRestore);
                 logger::debug("Attack hit! Stamina restored by {}.", staminaRestore);
             }
+
         }
 
         if (std::strcmp(a_event->tag.c_str(), DodgeString) == 0) {
@@ -142,3 +143,4 @@ EventResult AnimationGraphEventHandler::ProcessEvent_PC(RE::BSTEventSink<RE::BSA
     ProcessEvent(a_sink, a_event, a_eventSource);
     return _ProcessEvent_PC(a_sink, a_event, a_eventSource);
 }
+
