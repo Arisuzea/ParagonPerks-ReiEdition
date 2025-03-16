@@ -254,6 +254,7 @@ public:
     }
 
     inline static void StaminaCost(RE::Actor* actor, double cost);
+    inline static void RestoreStamina(RE::Actor* actor, double staminaAmount);
 
     const char* jumpAnimEventString = "JumpUp";
 
